@@ -20,7 +20,10 @@
 
 #include "app/resource.h"
 
-#include "ui_textresource.h"
+namespace Ui
+{
+  class TextResource;
+}
 
 class TextResource : public Resource
 {
@@ -30,6 +33,7 @@ public:
   TextResource(QString id, QWidget* parent = 0, Qt::WindowFlags flags = 0);
   TextResource(const TextResource& res);
   TextResource(QString id, QDataStream* in, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  ~TextResource();
 
   QString           type() const  { return "text"; }
   Resource*         clone() const { return new TextResource(*this); }
@@ -39,7 +43,7 @@ protected:
   void              write(QDataStream* out) const;
 
 private:
-  Ui::TextResource  m_ui;
+  Ui::TextResource*  m_ui;
 };
 
 #endif

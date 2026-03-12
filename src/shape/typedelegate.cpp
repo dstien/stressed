@@ -28,7 +28,7 @@ TypeDelegate::TypeDelegate(QObject *parent)
 QWidget* TypeDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem& /*option*/, const QModelIndex& /*index*/) const
 {
   QComboBox* editor = new QComboBox(parent);
-  editor->addItems(ShapeModel::TYPES);
+  editor->addItems(ShapeModel::TYPES());
 
   return editor;
 }

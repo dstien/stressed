@@ -20,7 +20,10 @@
 
 #include "app/resource.h"
 
-#include "ui_rawresource.h"
+namespace Ui
+{
+  class RawResource;
+}
 
 class QLineEdit;
 
@@ -32,6 +35,7 @@ public:
   RawResource(QString id, QString type, unsigned int length, QWidget* parent = 0, Qt::WindowFlags flags = 0);
   RawResource(const RawResource& res);
   RawResource(QString id, QString type, unsigned int length, QDataStream* in, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  ~RawResource();
 
   QString           type() const  { return m_type; }
   Resource*         clone() const { return new RawResource(*this); }
@@ -51,7 +55,7 @@ private:
   void              setup();
   void              cleanup();
 
-  Ui::RawResource   m_ui;
+  Ui::RawResource*   m_ui;
 
   QString           m_type;
   unsigned int      m_length;

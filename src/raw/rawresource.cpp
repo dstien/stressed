@@ -22,6 +22,8 @@
 #include "app/settings.h"
 #include "rawresource.h"
 
+#include "ui_rawresource.h"
+
 QString RawResource::m_currentFilePath;
 
 const int RawResource::LENGTH_PATH;
@@ -33,9 +35,10 @@ const char RawResource::FILE_FILTERS[] = "All files (*)";
 RawResource::RawResource(QString id, QString type, unsigned int length, QWidget* parent, Qt::WindowFlags flags)
 : Resource(id, parent, flags),
   m_type(type),
-  m_length(length)
+  m_length(length),
+  m_ui(new Ui::RawResource)
 {
-  m_ui.setupUi(this);
+  m_ui->setupUi(this);
 
   setup();
 
@@ -47,9 +50,10 @@ RawResource::RawResource(QString id, QString type, unsigned int length, QWidget*
 RawResource::RawResource(const RawResource& res)
 : Resource(res.id(), qobject_cast<QWidget*>(res.parent()), res.windowFlags()),
   m_type(res.m_type),
-  m_length(res.m_length)
+  m_length(res.m_length),
+  m_ui(new Ui::RawResource)
 {
-  m_ui.setupUi(this);
+  m_ui->setupUi(this);
 
   setup();
 
@@ -61,15 +65,21 @@ RawResource::RawResource(const RawResource& res)
 RawResource::RawResource(QString id, QString type, unsigned int length, QDataStream* in, QWidget* parent, Qt::WindowFlags flags)
 : Resource(id, parent, flags),
   m_type(type),
-  m_length(length)
+  m_length(length),
+  m_ui(new Ui::RawResource)
 {
-  m_ui.setupUi(this);
+  m_ui->setupUi(this);
 
   setup();
 
   parse(in);
 }
 
+RawResource::~RawResource()
+{
+  delete m_ui;
+}
+  
 void RawResource::parse(QDataStream* in)
 {
   quint8 val;
@@ -96,7 +106,7 @@ void RawResource::write(QDataStream* out) const
 
 void RawResource::setup()
 {
-  const QFont* font = &m_ui.labelCol0->font();
+  const QFont* font = &m_ui->labelCol0->font();
 
   m_lineEdits = new QLineEdit*[m_length];
   for (unsigned int i = 0; i < m_length; ++i) {
@@ -104,7 +114,7 @@ void RawResource::setup()
     if (!(i % 16)) {
       QLabel* lbl = new QLabel(QString("%1").arg(i / 16, 3, 16, QLatin1Char('0')).toUpper().append('0'), this);
       lbl->setFont(*font);
-      m_ui.gridLayout->addWidget(lbl, 1 + (i / 16), 0, 1, 1);
+      m_ui->gridLayout->addWidget(lbl, 1 + (i / 16), 0, 1, 1);
     }
 
     QLineEdit* le = new QLineEdit(this);
@@ -113,7 +123,7 @@ void RawResource::setup()
     le->setInputMask("HH;");
     le->setMaximumSize(QSize(25, 0xFFFFFF));
 
-    m_ui.gridLayout->addWidget(le, 1 + (i / 16), 1 + (i % 16), 1, 1);
+    m_ui->gridLayout->addWidget(le, 1 + (i / 16), 1 + (i % 16), 1, 1);
     m_lineEdits[i] = le;
 
     connect(le, SIGNAL(textChanged(QString)), this, SLOT(isModified()));
@@ -127,7 +137,7 @@ void RawResource::cleanup()
 
     // Row label.
     if (!(i % 16)) {
-      QLayoutItem* lbl = m_ui.gridLayout->itemAtPosition(1 + (i / 16), 0);
+      QLayoutItem* lbl = m_ui->gridLayout->itemAtPosition(1 + (i / 16), 0);
       if (lbl) {
         delete lbl->widget();
       }

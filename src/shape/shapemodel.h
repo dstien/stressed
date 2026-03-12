@@ -89,7 +89,7 @@ public:
   void              replaceMaterials(quint8 paintJob, quint8 curMaterial, quint8 newMaterial);
   void              movePaintJobs(QItemSelectionModel* selectionModel, int direction);
 
-  static const QStringList TYPES;
+  static const QStringList& TYPES();
 
   static const int  ROWS_MAX = 256;
 

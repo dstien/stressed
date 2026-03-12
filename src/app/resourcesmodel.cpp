@@ -92,6 +92,7 @@ Resource* ResourcesModel::at(const QModelIndex& index) const
 
 void ResourcesModel::insertRow(Resource* resource, int position)
 {
+  position = position == ROWS_MAX ? m_resources.size() : position;
   beginInsertRows(QModelIndex(), position, position);
   m_resources.insert(position, resource);
   endInsertRows();
