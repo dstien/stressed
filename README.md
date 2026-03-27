@@ -1,69 +1,47 @@
-stressed - Stunts/4D [Sports] Driving resource editor
+# stressed
 
-ABOUT
+**Stunts/4D [Sports] Driving resource editor**
 
- Stressed is a resource editor for the PC version of the game "Stunts"
- (Broderbund), also published as "4D Sports Driving" (Mindscape) and
- "4D Driving" (Electronic Arts).
+Stressed is a resource editor for the PC version of the game "Stunts" (Broderbund), also published as "4D Sports Driving" (Mindscape) and "4D Driving" (Electronic Arts).
 
- Currently only files containing plain text, bitmap images or 3d shapes are
- supported. Stunts 1.0 files are not supported.
+Currently only files containing plain text, pixel graphics or 3d shapes are supported. Stunts 1.0 files are not supported.
 
- Stressed runs in all desktop environments where Qt and OpenGL are available.
+Stressed runs in all desktop environments where Qt and OpenGL are available.
 
-DEPENDENCIES
+## Dependencies
 
- - Qt 5.0 (or higher) development tools and libraries
- - OpenGL
+* Qt 5.0 (or higher) development tools and libraries
+* OpenGL
+* cmake and a supported C++ toolchain
 
-BUILDING
+## Building
 
- Run "qmake" to generate makefiles and then "make" to build.
- 
- Build Examples:
- 
- Build with VS2019 Community/Qt5.15 Open Source under Win7:
-   1. install Qt 32 and/or 64 Bit with maintainance tool or build from source
-   2. start Visual Studio Command shell (or vcvars) to have build tools available
-   3. git clone https://github.com/dstien/gameformats.git
-   4. cd gameformats/stunts/stressed
-   5. c:\Qt\5.15.0\msvc2019\bin\qmake.exe
-   6. nmake
-   7. goto to the folder src\app\release
-   8. add following Qt dlls from your Qt Installation
-    
-      Qt5Core.dll
-      Qt5Gui.dll
-      Qt5OpenGL.dll
-      Qt5Widgets.dll
-      \platforms
-        qwindows.dll
-     
-  Build under Ubunut 20.04 LTS/Minimal Installation
-    1. sudo apt update
-    2. sudo apt upgrade
-    3. sudo apt install build-essential # for gcc
-    4. sudo apt install mesa-common-dev # for opengl
-    5. sudo apt install qt5-default
-    6. sudo apt install libqt5opengl5-dev # needed for Mint 19.3, Ubuntu 18.04
-    7. sudo apt install git
-    8. git clone https://github.com/dstien/gameformats.git
-    9. cd gameformats/stunts/stressed
-    10. qmake
-    11. make
-    12. ./src/app/stressed
+0. `git clone https://github.com/dstien/stressed.git`
+1. `cd stressed`
+2. `mkdir build`
+3. `cd build`
+4. `cmake ..`
+5. `make`
+6. Run `src/app/stressed`
 
-USAGE
+*TODO: Current Windows build instructions.*
 
- Stressed can optionally load a file on startup if a valid path is given as
- the first non-Qt parameter.
+## Usage
 
-LICENSE
+Stressed can optionally load a file on startup if a valid path is given as the first non-Qt parameter, allowing the program to be used as the default handler for Stunts related files in a desktop environment.
 
- GNU GPL version 2, see COPYING.
+The [user reference](https://wiki.stunts.hu/wiki/Stressed_user_reference) extensively documents the stressed's capabilities.
 
-CONTACT
+## Technical documentation
 
- Daniel Stien <daniel@stien.org>
- Daniel Mlot <duplode_1@yahoo.com.br>
- https://github.com/dstien/gameformats/tree/master/stunts/stressed
+The resource file format is documented on the [Stunts Wiki](https://wiki.stunts.hu/wiki/Resource_file_format).
+
+## Licence
+
+GNU GPL version 2, see COPYING.
+
+## Contact
+
+* [Daniel Stien](mailto:daniel@stien.org)
+* [Daniel Mlot](mailto:duplode_1@yahoo.com.br)
+* https://github.com/dstien/stressed
