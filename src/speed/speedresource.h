@@ -20,7 +20,12 @@
 
 #include "app/resource.h"
 
-#include "ui_speedresource.h"
+namespace Ui
+{
+  class SpeedResource;
+}
+
+class QSpinBox;
 
 class SpeedResource : public Resource
 {
@@ -30,6 +35,7 @@ public:
   SpeedResource(QString id, QWidget* parent = 0, Qt::WindowFlags flags = 0);
   SpeedResource(const SpeedResource& res);
   SpeedResource(QString id, QDataStream* in, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  ~SpeedResource();
 
   QString            type() const  { return "speed"; }
   Resource*          clone() const { return new SpeedResource(*this); }
@@ -41,7 +47,7 @@ protected:
 private:
   void               setup();
 
-  Ui::SpeedResource  m_ui;
+  Ui::SpeedResource*  m_ui;
 
   static const int   NUM_VALUES = 16;
   QSpinBox*          m_spinBoxes[NUM_VALUES];

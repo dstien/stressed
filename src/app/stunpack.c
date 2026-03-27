@@ -24,7 +24,7 @@
 
 #include "stunpack.h"
 
-inline void stpk_getLength(stpk_Buffer *buf, uint *len);
+void stpk_getLength(stpk_Buffer* buf, uint* len);
 
 // Decompress sub-files in source buffer.
 uint stpk_decomp(stpk_Buffer *src, stpk_Buffer *dst, int maxPasses, int verbose, char *err)

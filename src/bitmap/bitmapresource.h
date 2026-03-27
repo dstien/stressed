@@ -20,7 +20,10 @@
 
 #include "app/resource.h"
 
-#include "ui_bitmapresource.h"
+namespace Ui
+{
+  class BitmapResource;
+ }
 
 class BitmapResource : public Resource
 {
@@ -48,7 +51,7 @@ private slots:
 private:
   void                 setup();
 
-  Ui::BitmapResource   m_ui;
+  Ui::BitmapResource*   m_ui;
 
   QImage*              m_image;
 

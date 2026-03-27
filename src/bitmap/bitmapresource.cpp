@@ -24,6 +24,8 @@
 #include "app/settings.h"
 #include "bitmapresource.h"
 
+#include "ui_bitmapresource.h"
+
 QString BitmapResource::m_currentFilePath;
 QString BitmapResource::m_currentFileFilter;
 
@@ -36,53 +38,56 @@ const char BitmapResource::FILE_FILTERS[] =
     "All files (*)";
 
 BitmapResource::BitmapResource(QString id, QWidget* parent, Qt::WindowFlags flags)
-: Resource(id, parent, flags)
+: Resource(id, parent, flags), 
+  m_ui(new Ui::BitmapResource)
 {
   setup();
 
-  m_ui.editWidth->setText("0");
-  m_ui.editHeight->setText("0");
-  m_ui.editX->setText("0");
-  m_ui.editY->setText("0");
+  m_ui->editWidth->setText("0");
+  m_ui->editHeight->setText("0");
+  m_ui->editX->setText("0");
+  m_ui->editY->setText("0");
 
-  m_ui.editUnk1->setText("0000");
-  m_ui.editUnk2->setText("0000");
-  m_ui.editUnk3->setText("01");
-  m_ui.editUnk4->setText("02");
-  m_ui.editUnk5->setText("04");
-  m_ui.editUnk6->setText("08");
+  m_ui->editUnk1->setText("0000");
+  m_ui->editUnk2->setText("0000");
+  m_ui->editUnk3->setText("01");
+  m_ui->editUnk4->setText("02");
+  m_ui->editUnk5->setText("04");
+  m_ui->editUnk6->setText("08");
 }
 
 BitmapResource::BitmapResource(const BitmapResource& res)
-: Resource(res.id(), dynamic_cast<QWidget*>(res.parent()), res.windowFlags())
+: Resource(res.id(), dynamic_cast<QWidget*>(res.parent()), res.windowFlags()), 
+  m_ui(new Ui::BitmapResource)
 {
   setup();
 
-  m_ui.editWidth->setText(res.m_ui.editWidth->text());
-  m_ui.editHeight->setText(res.m_ui.editHeight->text());
-  m_ui.editX->setText(res.m_ui.editX->text());
-  m_ui.editY->setText(res.m_ui.editY->text());
+  m_ui->editWidth->setText(res.m_ui->editWidth->text());
+  m_ui->editHeight->setText(res.m_ui->editHeight->text());
+  m_ui->editX->setText(res.m_ui->editX->text());
+  m_ui->editY->setText(res.m_ui->editY->text());
 
-  m_ui.editUnk1->setText(res.m_ui.editUnk1->text());
-  m_ui.editUnk2->setText(res.m_ui.editUnk2->text());
-  m_ui.editUnk3->setText(res.m_ui.editUnk3->text());
-  m_ui.editUnk4->setText(res.m_ui.editUnk4->text());
-  m_ui.editUnk5->setText(res.m_ui.editUnk5->text());
-  m_ui.editUnk6->setText(res.m_ui.editUnk6->text());
+  m_ui->editUnk1->setText(res.m_ui->editUnk1->text());
+  m_ui->editUnk2->setText(res.m_ui->editUnk2->text());
+  m_ui->editUnk3->setText(res.m_ui->editUnk3->text());
+  m_ui->editUnk4->setText(res.m_ui->editUnk4->text());
+  m_ui->editUnk5->setText(res.m_ui->editUnk5->text());
+  m_ui->editUnk6->setText(res.m_ui->editUnk6->text());
 
   if (res.m_image) {
     m_image = new QImage(*res.m_image);
   }
 
-  m_ui.radioScale1->setChecked(res.m_ui.radioScale1->isChecked());
-  m_ui.radioScale2->setChecked(res.m_ui.radioScale2->isChecked());
-  m_ui.radioScale4->setChecked(res.m_ui.radioScale4->isChecked());
-  m_ui.checkAlpha->setChecked(res.m_ui.checkAlpha->isChecked());
-  toggleAlpha(m_ui.checkAlpha->isChecked());
+  m_ui->radioScale1->setChecked(res.m_ui->radioScale1->isChecked());
+  m_ui->radioScale2->setChecked(res.m_ui->radioScale2->isChecked());
+  m_ui->radioScale4->setChecked(res.m_ui->radioScale4->isChecked());
+  m_ui->checkAlpha->setChecked(res.m_ui->checkAlpha->isChecked());
+  toggleAlpha(m_ui->checkAlpha->isChecked());
 }
 
 BitmapResource::BitmapResource(QString id, QDataStream* in, QWidget* parent, Qt::WindowFlags flags)
-: Resource(id, parent, flags)
+: Resource(id, parent, flags),
+  m_ui(new Ui::BitmapResource)
 {
   setup();
 
@@ -92,15 +97,16 @@ BitmapResource::BitmapResource(QString id, QDataStream* in, QWidget* parent, Qt:
 BitmapResource::~BitmapResource()
 {
   delete m_image;
+  delete m_ui;
 }
 
 void BitmapResource::setup()
 {
-  m_ui.setupUi(this);
+  m_ui->setupUi(this);
 
   QIntValidator* posValidator = new QIntValidator(0, 65535, this);
-  m_ui.editX->setValidator(posValidator);
-  m_ui.editY->setValidator(posValidator);
+  m_ui->editX->setValidator(posValidator);
+  m_ui->editY->setValidator(posValidator);
 
   m_image = 0;
 }
@@ -117,17 +123,17 @@ void BitmapResource::parse(QDataStream* in)
   *in >> unk3 >> unk4 >> unk5 >> unk6;
   checkError(in, tr("header"));
 
-  m_ui.editWidth->setText(QString::number(width));
-  m_ui.editHeight->setText(QString::number(height));
-  m_ui.editX->setText(QString::number(x));
-  m_ui.editY->setText(QString::number(y));
+  m_ui->editWidth->setText(QString::number(width));
+  m_ui->editHeight->setText(QString::number(height));
+  m_ui->editX->setText(QString::number(x));
+  m_ui->editY->setText(QString::number(y));
 
-  m_ui.editUnk1->setText(QString("%1").arg(unk1, 4, 16, QChar('0')).toUpper());
-  m_ui.editUnk2->setText(QString("%1").arg(unk2, 4, 16, QChar('0')).toUpper());
-  m_ui.editUnk3->setText(QString("%1").arg(unk3, 2, 16, QChar('0')).toUpper());
-  m_ui.editUnk4->setText(QString("%1").arg(unk4, 2, 16, QChar('0')).toUpper());
-  m_ui.editUnk5->setText(QString("%1").arg(unk5, 2, 16, QChar('0')).toUpper());
-  m_ui.editUnk6->setText(QString("%1").arg(unk6, 2, 16, QChar('0')).toUpper());
+  m_ui->editUnk1->setText(QString("%1").arg(unk1, 4, 16, QChar('0')).toUpper());
+  m_ui->editUnk2->setText(QString("%1").arg(unk2, 4, 16, QChar('0')).toUpper());
+  m_ui->editUnk3->setText(QString("%1").arg(unk3, 2, 16, QChar('0')).toUpper());
+  m_ui->editUnk4->setText(QString("%1").arg(unk4, 2, 16, QChar('0')).toUpper());
+  m_ui->editUnk5->setText(QString("%1").arg(unk5, 2, 16, QChar('0')).toUpper());
+  m_ui->editUnk6->setText(QString("%1").arg(unk6, 2, 16, QChar('0')).toUpper());
 
   if (width == 0 || height == 0) {
     return;
@@ -190,8 +196,8 @@ void BitmapResource::parse(QDataStream* in)
   delete[] data;
   data = 0;
 
-  m_ui.buttonExport->setEnabled(true);
-  toggleAlpha(m_ui.checkAlpha->isChecked());
+  m_ui->buttonExport->setEnabled(true);
+  toggleAlpha(m_ui->checkAlpha->isChecked());
 }
 
 void BitmapResource::write(QDataStream* out) const
@@ -206,16 +212,16 @@ void BitmapResource::write(QDataStream* out) const
     *out << (quint16)0 << (quint16)0;
   }
 
-  unk1 = m_ui.editUnk1->text().toUShort(0, 16);
-  unk2 = m_ui.editUnk2->text().toUShort(0, 16);
-  x = m_ui.editX->text().toUShort();
-  y = m_ui.editY->text().toUShort();
+  unk1 = m_ui->editUnk1->text().toUShort(0, 16);
+  unk2 = m_ui->editUnk2->text().toUShort(0, 16);
+  x = m_ui->editX->text().toUShort();
+  y = m_ui->editY->text().toUShort();
   *out << unk1 << unk2 << x << y;
 
-  unk3 = m_ui.editUnk3->text().toUShort(0, 16);
-  unk4 = m_ui.editUnk4->text().toUShort(0, 16);
-  unk5 = m_ui.editUnk5->text().toUShort(0, 16) & 0xCF;
-  unk6 = m_ui.editUnk6->text().toUShort(0, 16);
+  unk3 = m_ui->editUnk3->text().toUShort(0, 16);
+  unk4 = m_ui->editUnk4->text().toUShort(0, 16);
+  unk5 = m_ui->editUnk5->text().toUShort(0, 16) & 0xCF;
+  unk6 = m_ui->editUnk6->text().toUShort(0, 16);
   *out << unk3 << unk4 << unk5 << unk6;
 
   checkError(out, tr("header"), true);
@@ -247,17 +253,17 @@ void BitmapResource::scale()
     return;
   }
 
-  if (m_ui.radioScale1->isChecked()) {
-    m_ui.imageLabel->setPixmap(QPixmap::fromImage(*m_image));
+  if (m_ui->radioScale1->isChecked()) {
+    m_ui->imageLabel->setPixmap(QPixmap::fromImage(*m_image));
   }
-  else if (m_ui.radioScale2->isChecked()) {
-    m_ui.imageLabel->setPixmap(QPixmap::fromImage(m_image->scaled(m_image->width() * 2, m_image->height() * 2)));
+  else if (m_ui->radioScale2->isChecked()) {
+    m_ui->imageLabel->setPixmap(QPixmap::fromImage(m_image->scaled(m_image->width() * 2, m_image->height() * 2)));
   }
-  else if (m_ui.radioScale4->isChecked()) {
-    m_ui.imageLabel->setPixmap(QPixmap::fromImage(m_image->scaled(m_image->width() * 4, m_image->height() * 4)));
+  else if (m_ui->radioScale4->isChecked()) {
+    m_ui->imageLabel->setPixmap(QPixmap::fromImage(m_image->scaled(m_image->width() * 4, m_image->height() * 4)));
   }
 
-  m_ui.imageLabel->adjustSize();
+  m_ui->imageLabel->adjustSize();
 }
 
 void BitmapResource::exportFile()
@@ -358,17 +364,17 @@ void BitmapResource::importFile()
         }
       }
 
-      m_ui.editWidth->setText(QString::number(m_image->width()));
-      m_ui.editHeight->setText(QString::number(m_image->height()));
+      m_ui->editWidth->setText(QString::number(m_image->width()));
+      m_ui->editHeight->setText(QString::number(m_image->height()));
 
-      m_ui.editUnk3->setText(QString("%1").arg(1, 2, 16, QChar('0')));
-      m_ui.editUnk4->setText(QString("%1").arg(2, 2, 16, QChar('0')));
-      m_ui.editUnk5->setText(QString("%1").arg(4, 2, 16, QChar('0')));
-      m_ui.editUnk6->setText(QString("%1").arg(8, 2, 16, QChar('0')));
+      m_ui->editUnk3->setText(QString("%1").arg(1, 2, 16, QChar('0')));
+      m_ui->editUnk4->setText(QString("%1").arg(2, 2, 16, QChar('0')));
+      m_ui->editUnk5->setText(QString("%1").arg(4, 2, 16, QChar('0')));
+      m_ui->editUnk6->setText(QString("%1").arg(8, 2, 16, QChar('0')));
 
-      m_ui.buttonExport->setEnabled(true);
+      m_ui->buttonExport->setEnabled(true);
 
-      toggleAlpha(m_ui.checkAlpha->isChecked()); // Repaint
+      toggleAlpha(m_ui->checkAlpha->isChecked()); // Repaint
       isModified();
     }
     catch (QString msg) {

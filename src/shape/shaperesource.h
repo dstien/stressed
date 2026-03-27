@@ -21,7 +21,10 @@
 #include "app/resource.h"
 #include "verticesmodel.h"
 
-#include "ui_shaperesource.h"
+namespace Ui
+{
+  class ShapeResource;
+}
 
 class ShapeModel;
 
@@ -33,6 +36,7 @@ public:
   ShapeResource(QString id, QWidget* parent = 0, Qt::WindowFlags flags = 0);
   ShapeResource(const ShapeResource& res);
   ShapeResource(QString id, QDataStream* in, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  ~ShapeResource();
 
   QString           type() const       { return "shape"; }
   Resource*         clone() const      { return new ShapeResource(*this); }
@@ -88,7 +92,7 @@ private:
   void              showEvent(QShowEvent* event);
   VerticesList      buildVerticesList(bool boundBox = false) const;
 
-  Ui::ShapeResource m_ui;
+  Ui::ShapeResource* m_ui;
 
   ShapeModel*       m_shapeModel;
   Primitive*        m_currentPrimitive;

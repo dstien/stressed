@@ -34,11 +34,6 @@ const int ShapeModel::TYPE_MAX;
 const int ShapeModel::PAINTJOBS_MIN;
 const int ShapeModel::PAINTJOBS_MAX;
 
-const QStringList ShapeModel::TYPES = (QStringList()
-    << tr("Particle")    << tr("Line")         << tr("Polygon (3)") << tr("Polygon (4)")
-    << tr("Polygon (5)") << tr("Polygon (6)")  << tr("Polygon (7)") << tr("Polygon (8)")
-    << tr("Polygon (9)") << tr("Polygon (10)") << tr("Sphere")      << tr("Wheel"));
-
 ShapeModel::ShapeModel(QObject* parent)
 : QAbstractTableModel(parent)
 {
@@ -109,7 +104,7 @@ QVariant ShapeModel::data(const QModelIndex& index, int role) const
       break;
     case Qt::DisplayRole:
       if (col == 0) {
-        return TYPES[m_primitives[row].type - 1];
+        return TYPES()[m_primitives[row].type - 1];
       }
     case Qt::EditRole:
       if (col == 0) {
@@ -689,6 +684,15 @@ void ShapeModel::movePaintJobs(QItemSelectionModel* selectionModel, int directio
   foreach (QPersistentModelIndex row, curPersistentRows) {
     selectionModel->select(row, (QItemSelectionModel::Select | QItemSelectionModel::Rows));
   }
+}
+
+const QStringList& ShapeModel::TYPES()
+{
+  const static QStringList types = (QStringList()
+    << tr("Particle")    << tr("Line")         << tr("Polygon (3)") << tr("Polygon (4)")
+    << tr("Polygon (5)") << tr("Polygon (6)")  << tr("Polygon (7)") << tr("Polygon (8)")
+    << tr("Polygon (9)") << tr("Polygon (10)") << tr("Sphere")      << tr("Wheel"));
+  return types;
 }
 
 void ShapeModel::isModified()

@@ -20,7 +20,9 @@
 
 #include "app/resource.h"
 
-#include "ui_animationresource.h"
+namespace Ui {
+  class AnimationResource;
+}
 
 class AnimationResource : public Resource
 {
@@ -30,6 +32,7 @@ public:
   AnimationResource(QString id, QWidget* parent = 0, Qt::WindowFlags flags = 0);
   AnimationResource(const AnimationResource& res);
   AnimationResource(QString id, QDataStream* in, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  ~AnimationResource();
 
   QString                type() const  { return "animation"; }
   Resource*              clone() const { return new AnimationResource(*this); }
@@ -39,7 +42,7 @@ protected:
   void                   write(QDataStream* out) const;
 
 private:
-  Ui::AnimationResource  m_ui;
+  Ui::AnimationResource*  m_ui;
 };
 
 #endif

@@ -33,6 +33,8 @@
 #include "typedelegate.h"
 #include "verticesmodel.h"
 
+#include "ui_shaperesource.h"
+
 QString       ShapeResource::m_currentFilePath;
 QString       ShapeResource::m_currentFileFilter;
 
@@ -48,68 +50,76 @@ const QRegExp ShapeResource::OBJ_REGEXP_VERTEX     = QRegExp("^v(\\s+([+-]?\\d*\
 const QRegExp ShapeResource::OBJ_REGEXP_FACE       = QRegExp("^(fo?|[lp])((\\s+-?\\d+)(/-?\\d*){,2}){1,10}\\s*$");
 
 ShapeResource::ShapeResource(QString id, QWidget* parent, Qt::WindowFlags flags)
-: Resource(id, parent, flags)
+: Resource(id, parent, flags),
+  m_ui(new Ui::ShapeResource)
 {
   m_shapeModel = new ShapeModel(this);
   setup();
 }
 
 ShapeResource::ShapeResource(const ShapeResource& res)
-: Resource(res.id(), dynamic_cast<QWidget*>(res.parent()), res.windowFlags())
+: Resource(res.id(), dynamic_cast<QWidget*>(res.parent()), res.windowFlags()),
+  m_ui(new Ui::ShapeResource)
 {
   m_shapeModel = new ShapeModel(*res.m_shapeModel, this);
   setup();
 }
 
 ShapeResource::ShapeResource(QString id, QDataStream* in, QWidget* parent, Qt::WindowFlags flags)
-: Resource(id, parent, flags)
+: Resource(id, parent, flags),
+  m_ui(new Ui::ShapeResource)
 {
   m_shapeModel = new ShapeModel(this);
   parse(in);
   setup();
 }
 
+ShapeResource::~ShapeResource()
+{
+  delete m_ui;
+}
+  
 void ShapeResource::setup()
 {
   m_currentPrimitive = 0;
 
-  m_ui.setupUi(this);
+  m_ui->setupUi(this);
 
-  m_ui.primitivesView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-  m_ui.primitivesView->verticalHeader()->setDefaultSectionSize(20);
-  m_ui.primitivesView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+  m_ui->primitivesView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+  m_ui->primitivesView->verticalHeader()->setDefaultSectionSize(20);
+  m_ui->primitivesView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
-  m_ui.verticesView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-  m_ui.materialsView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+  m_ui->verticesView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+  m_ui->materialsView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
-  m_ui.primitivesView->setItemDelegateForColumn(0, new TypeDelegate(m_ui.primitivesView));
+  m_ui->primitivesView->setItemDelegateForColumn(0, new TypeDelegate(m_ui->primitivesView));
 
-  FlagDelegate* flagDelegate = new FlagDelegate(m_ui.primitivesView);
-  m_ui.primitivesView->setItemDelegateForColumn(1, flagDelegate);
-  m_ui.primitivesView->setItemDelegateForColumn(2, flagDelegate);
+  FlagDelegate* flagDelegate = new FlagDelegate(m_ui->primitivesView);
+  m_ui->primitivesView->setItemDelegateForColumn(1, flagDelegate);
+  m_ui->primitivesView->setItemDelegateForColumn(2, flagDelegate);
 
-  m_ui.primitivesView->setModel(m_shapeModel);
-  m_ui.shapeView->setModel(m_shapeModel);
-  m_ui.shapeView->setSelectionModel(m_ui.primitivesView->selectionModel());
+  m_ui->primitivesView->setModel(m_shapeModel);
+  m_ui->shapeView->setModel(m_shapeModel);
+  m_ui->shapeView->setSelectionModel(m_ui->primitivesView->selectionModel());
 
-  m_ui.shapeView->reset();
+  m_ui->shapeView->reset();
 
-  m_ui.materialsView->setItemDelegateForColumn(0, new MaterialDelegate(m_ui.materialsView));
+  m_ui->materialsView->setItemDelegateForColumn(0, new MaterialDelegate(m_ui->materialsView));
 
-  m_ui.numPaintJobsSpinBox->setValue(m_shapeModel->numPaintJobs());
-  m_ui.paintJobSpinBox->setMaximum(m_shapeModel->numPaintJobs());
+  m_ui->numPaintJobsSpinBox->setValue(m_shapeModel->numPaintJobs());
+  m_ui->paintJobSpinBox->setMaximum(m_shapeModel->numPaintJobs());
 
   connect(m_shapeModel, SIGNAL(dataChanged(QModelIndex, QModelIndex)),
       this, SLOT(isModified()));
   connect(m_shapeModel, SIGNAL(paintJobMoved(int, int)),
       this, SIGNAL(paintJobMoved(int, int)));
-  connect(m_ui.primitivesView->selectionModel(), SIGNAL(currentChanged(QModelIndex, QModelIndex)),
+  connect(m_ui->primitivesView->selectionModel(), SIGNAL(currentChanged(QModelIndex, QModelIndex)),
       this, SLOT(setModels(QModelIndex)));
 }
 
 void ShapeResource::showEvent(QShowEvent* event)
 {
-  VerticesModel::toggleWeld(m_ui.weldCheckBox->isChecked());
+  VerticesModel::toggleWeld(m_ui->weldCheckBox->isChecked());
   Resource::showEvent(event);
 }
 
@@ -224,7 +234,7 @@ void ShapeResource::write(QDataStream* out) const
   VerticesList vertices = buildVerticesList(!id().contains(QRegExp("exp[0-3]{1,1}$")));
 
   // Write header.
-  *out << (quint8)vertices.size() << (quint8)m_shapeModel->rowCount() << (quint8)m_ui.paintJobSpinBox->maximum() << (quint8)0;
+  *out << (quint8)vertices.size() << (quint8)m_shapeModel->rowCount() << (quint8)m_ui->paintJobSpinBox->maximum() << (quint8)0;
   checkError(out, tr("header"), true);
 
   // Write vertex data.
@@ -279,9 +289,9 @@ void ShapeResource::deselectAll()
 {
   m_currentPrimitive = 0;
 
-  m_ui.materialsView->clearSelection();
-  m_ui.verticesView->clearSelection();
-  m_ui.primitivesView->clearSelection();
+  m_ui->materialsView->clearSelection();
+  m_ui->verticesView->clearSelection();
+  m_ui->primitivesView->clearSelection();
 }
 
 void ShapeResource::setModels(const QModelIndex& index)
@@ -294,21 +304,21 @@ void ShapeResource::setModels(const QModelIndex& index)
 
   m_currentPrimitive = (Primitive*)&m_shapeModel->primitivesList()->at(row);
 
-  m_ui.verticesView->setModel(m_currentPrimitive->verticesModel);
-  m_ui.materialsView->setModel(m_currentPrimitive->materialsModel);
+  m_ui->verticesView->setModel(m_currentPrimitive->verticesModel);
+  m_ui->materialsView->setModel(m_currentPrimitive->materialsModel);
 
-  m_ui.shapeView->setCurrentIndex(index);
-  m_ui.shapeView->setVertexSelectionModel(m_ui.verticesView->selectionModel());
+  m_ui->shapeView->setCurrentIndex(index);
+  m_ui->shapeView->setVertexSelectionModel(m_ui->verticesView->selectionModel());
 
-  connect(m_ui.verticesView->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
-      m_ui.shapeView, SLOT(selectionChanged(QItemSelection, QItemSelection)));
+  connect(m_ui->verticesView->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
+      m_ui->shapeView, SLOT(selectionChanged(QItemSelection, QItemSelection)));
 }
 
 void ShapeResource::setNumPaintJobs()
 {
-  int num = m_ui.numPaintJobsSpinBox->value();
+  int num = m_ui->numPaintJobsSpinBox->value();
   if (m_shapeModel->setNumPaintJobs(num)) {
-    m_ui.paintJobSpinBox->setMaximum(num);
+    m_ui->paintJobSpinBox->setMaximum(num);
     isModified();
   }
 }
@@ -320,8 +330,8 @@ void ShapeResource::toggleWeld(bool enable)
 
 void ShapeResource::movePrimitives(int direction)
 {
-  if (m_ui.primitivesView->selectionModel()->hasSelection()) {
-    m_shapeModel->moveRows(m_ui.primitivesView->selectionModel(), direction);
+  if (m_ui->primitivesView->selectionModel()->hasSelection()) {
+    m_shapeModel->moveRows(m_ui->primitivesView->selectionModel(), direction);
     isModified();
   }
 }
@@ -339,12 +349,12 @@ void ShapeResource::moveUpPrimitives()
 void ShapeResource::moveToPrimitives()
 {
   bool success;
-  int curPosition = m_ui.primitivesView->currentIndex().row();
+  int curPosition = m_ui->primitivesView->currentIndex().row();
   int newPosition = QInputDialog::getInt(
       this,
       tr("Move primitive"),
-      tr("New position (1 - %1):").arg(m_ui.primitivesView->model()->rowCount()),
-      curPosition + 1, 1, m_ui.primitivesView->model()->rowCount(), 1, &success) - 1;
+      tr("New position (1 - %1):").arg(m_ui->primitivesView->model()->rowCount()),
+      curPosition + 1, 1, m_ui->primitivesView->model()->rowCount(), 1, &success) - 1;
 
   if (success && (newPosition != curPosition)) {
     movePrimitives(newPosition - curPosition);
@@ -364,8 +374,8 @@ void ShapeResource::moveLastPrimitives()
 void ShapeResource::insertPrimitive()
 {
   int row;
-  if (m_ui.primitivesView->selectionModel()->hasSelection()) {
-    row = m_ui.primitivesView->currentIndex().row();
+  if (m_ui->primitivesView->selectionModel()->hasSelection()) {
+    row = m_ui->primitivesView->currentIndex().row();
   }
   else {
     // Insert at end if no rows are selected.
@@ -375,47 +385,47 @@ void ShapeResource::insertPrimitive()
   m_shapeModel->insertRows(row, 1);
 
   // Select the new row.
-  m_ui.primitivesView->selectionModel()->reset();
-  m_ui.primitivesView->setCurrentIndex(m_shapeModel->index((row < ShapeModel::ROWS_MAX ? row : m_shapeModel->rowCount() - 1), 0));
+  m_ui->primitivesView->selectionModel()->reset();
+  m_ui->primitivesView->setCurrentIndex(m_shapeModel->index((row < ShapeModel::ROWS_MAX ? row : m_shapeModel->rowCount() - 1), 0));
 
   isModified();
 }
 
 void ShapeResource::duplicatePrimitive()
 {
-  if (m_ui.primitivesView->selectionModel()->hasSelection()) {
-    int row = m_ui.primitivesView->currentIndex().row();
+  if (m_ui->primitivesView->selectionModel()->hasSelection()) {
+    int row = m_ui->primitivesView->currentIndex().row();
     m_shapeModel->duplicateRow(row);
 
-    m_ui.primitivesView->setCurrentIndex(m_shapeModel->index(row + 1, 0));
+    m_ui->primitivesView->setCurrentIndex(m_shapeModel->index(row + 1, 0));
     isModified();
   }
 }
 
 void ShapeResource::mirrorXPrimitive()
 {
-  if (m_ui.primitivesView->selectionModel()->hasSelection()) {
-    int row = m_ui.primitivesView->currentIndex().row();
+  if (m_ui->primitivesView->selectionModel()->hasSelection()) {
+    int row = m_ui->primitivesView->currentIndex().row();
     m_shapeModel->mirrorXRow(row);
 
-    m_ui.primitivesView->setCurrentIndex(m_shapeModel->index(row + 1, 0));
+    m_ui->primitivesView->setCurrentIndex(m_shapeModel->index(row + 1, 0));
     isModified();
   }
 }
 
 void ShapeResource::computeCullPrimitives()
 {
-  m_shapeModel->computeCullRows(m_ui.primitivesView->selectionModel()->selectedRows());
+  m_shapeModel->computeCullRows(m_ui->primitivesView->selectionModel()->selectedRows());
   isModified();
 }
 
 void ShapeResource::removePrimitives()
 {
-  m_shapeModel->removeRows(m_ui.primitivesView->selectionModel()->selectedRows());
+  m_shapeModel->removeRows(m_ui->primitivesView->selectionModel()->selectedRows());
 
   if (!m_shapeModel->rowCount()) {
-    m_ui.verticesView->setModel(0);
-    m_ui.materialsView->setModel(0);
+    m_ui->verticesView->setModel(0);
+    m_ui->materialsView->setModel(0);
   }
 
   isModified();
@@ -423,47 +433,47 @@ void ShapeResource::removePrimitives()
 
 void ShapeResource::primitivesContextMenu(const QPoint& /*pos*/)
 {
-  if (m_ui.primitivesView->selectionModel()->hasSelection()) {
-    m_ui.moveFirstPrimitivesAction->setEnabled(true);
-    m_ui.moveUpPrimitivesAction->setEnabled(true);
-    m_ui.moveToPrimitivesAction->setEnabled(true);
-    m_ui.moveDownPrimitivesAction->setEnabled(true);
-    m_ui.moveLastPrimitivesAction->setEnabled(true);
+  if (m_ui->primitivesView->selectionModel()->hasSelection()) {
+    m_ui->moveFirstPrimitivesAction->setEnabled(true);
+    m_ui->moveUpPrimitivesAction->setEnabled(true);
+    m_ui->moveToPrimitivesAction->setEnabled(true);
+    m_ui->moveDownPrimitivesAction->setEnabled(true);
+    m_ui->moveLastPrimitivesAction->setEnabled(true);
 
-    m_ui.duplicatePrimitiveAction->setEnabled(true);
-    m_ui.mirrorXPrimitiveAction->setEnabled(true);
-    m_ui.computeCullPrimitivesAction->setEnabled(true);
-    m_ui.removePrimitivesAction->setEnabled(true);
+    m_ui->duplicatePrimitiveAction->setEnabled(true);
+    m_ui->mirrorXPrimitiveAction->setEnabled(true);
+    m_ui->computeCullPrimitivesAction->setEnabled(true);
+    m_ui->removePrimitivesAction->setEnabled(true);
   }
   else {
-    m_ui.moveFirstPrimitivesAction->setEnabled(false);
-    m_ui.moveUpPrimitivesAction->setEnabled(false);
-    m_ui.moveToPrimitivesAction->setEnabled(false);
-    m_ui.moveDownPrimitivesAction->setEnabled(false);
-    m_ui.moveLastPrimitivesAction->setEnabled(false);
+    m_ui->moveFirstPrimitivesAction->setEnabled(false);
+    m_ui->moveUpPrimitivesAction->setEnabled(false);
+    m_ui->moveToPrimitivesAction->setEnabled(false);
+    m_ui->moveDownPrimitivesAction->setEnabled(false);
+    m_ui->moveLastPrimitivesAction->setEnabled(false);
 
-    m_ui.duplicatePrimitiveAction->setEnabled(false);
-    m_ui.mirrorXPrimitiveAction->setEnabled(false);
-    m_ui.computeCullPrimitivesAction->setEnabled(false);
-    m_ui.removePrimitivesAction->setEnabled(false);
+    m_ui->duplicatePrimitiveAction->setEnabled(false);
+    m_ui->mirrorXPrimitiveAction->setEnabled(false);
+    m_ui->computeCullPrimitivesAction->setEnabled(false);
+    m_ui->removePrimitivesAction->setEnabled(false);
   }
 
   if (m_shapeModel->rowCount() >= 255) {
-    m_ui.insertPrimitiveAction->setEnabled(false);
-    m_ui.duplicatePrimitiveAction->setEnabled(false);
-    m_ui.mirrorXPrimitiveAction->setEnabled(false);
+    m_ui->insertPrimitiveAction->setEnabled(false);
+    m_ui->duplicatePrimitiveAction->setEnabled(false);
+    m_ui->mirrorXPrimitiveAction->setEnabled(false);
   }
   else {
-    m_ui.insertPrimitiveAction->setEnabled(true);
+    m_ui->insertPrimitiveAction->setEnabled(true);
   }
 
-  m_ui.primitivesMenu->exec(QCursor::pos());
+  m_ui->primitivesMenu->exec(QCursor::pos());
 }
 
 void ShapeResource::flipVertices()
 {
-  if (m_ui.verticesView->model()) {
-    qobject_cast<VerticesModel*>(m_ui.verticesView->model())->flip();
+  if (m_ui->verticesView->model()) {
+    qobject_cast<VerticesModel*>(m_ui->verticesView->model())->flip();
   }
 
   isModified();
@@ -471,8 +481,8 @@ void ShapeResource::flipVertices()
 
 void ShapeResource::invertXVertices()
 {
-  if (m_ui.verticesView->model()) {
-    qobject_cast<VerticesModel*>(m_ui.verticesView->model())->invertX(false);
+  if (m_ui->verticesView->model()) {
+    qobject_cast<VerticesModel*>(m_ui->verticesView->model())->invertX(false);
   }
 
   isModified();
@@ -480,22 +490,22 @@ void ShapeResource::invertXVertices()
 
 void ShapeResource::verticesContextMenu(const QPoint& /*pos*/)
 {
-  if (m_ui.verticesView->model()) {
-    m_ui.flipVerticesAction->setEnabled(true);
-    m_ui.invertXVerticesAction->setEnabled(true);
+  if (m_ui->verticesView->model()) {
+    m_ui->flipVerticesAction->setEnabled(true);
+    m_ui->invertXVerticesAction->setEnabled(true);
   }
   else {
-    m_ui.flipVerticesAction->setEnabled(false);
-    m_ui.invertXVerticesAction->setEnabled(false);
+    m_ui->flipVerticesAction->setEnabled(false);
+    m_ui->invertXVerticesAction->setEnabled(false);
   }
 
-  m_ui.verticesMenu->exec(QCursor::pos());
+  m_ui->verticesMenu->exec(QCursor::pos());
 }
 
 void ShapeResource::replaceMaterials()
 {
-  if (m_ui.materialsView->model() && m_ui.materialsView->selectionModel()->hasSelection()) {
-    int curMaterial = m_ui.materialsView->model()->data(m_ui.materialsView->currentIndex()).toUInt();
+  if (m_ui->materialsView->model() && m_ui->materialsView->selectionModel()->hasSelection()) {
+    int curMaterial = m_ui->materialsView->model()->data(m_ui->materialsView->currentIndex()).toUInt();
 
     QDialog dlg(this);
     dlg.setWindowTitle(tr("Replace material"));
@@ -523,7 +533,7 @@ void ShapeResource::replaceMaterials()
       int newMaterial = comboBox->currentIndex();
 
       if (newMaterial != curMaterial) {
-        m_shapeModel->replaceMaterials(m_ui.materialsView->currentIndex().row(), curMaterial, newMaterial);
+        m_shapeModel->replaceMaterials(m_ui->materialsView->currentIndex().row(), curMaterial, newMaterial);
         isModified();
       }
     }
@@ -532,8 +542,8 @@ void ShapeResource::replaceMaterials()
 
 void ShapeResource::movePaintJobs(int direction)
 {
-  if (m_ui.materialsView->model()) {
-    QItemSelectionModel* materialsSelectionModel = m_ui.materialsView->selectionModel();
+  if (m_ui->materialsView->model()) {
+    QItemSelectionModel* materialsSelectionModel = m_ui->materialsView->selectionModel();
 
     if (materialsSelectionModel->hasSelection()) {
       m_shapeModel->movePaintJobs(materialsSelectionModel, direction);
@@ -565,12 +575,12 @@ void ShapeResource::moveLastPaintJobs()
 void ShapeResource::moveToPaintJobs()
 {
   bool success;
-  int curPosition = m_ui.materialsView->currentIndex().row();
+  int curPosition = m_ui->materialsView->currentIndex().row();
   int newPosition = QInputDialog::getInt(
       this,
       tr("Move paint-jobs"),
-      tr("New position (1 - %1):").arg(m_ui.materialsView->model()->rowCount()),
-      curPosition + 1, 1, m_ui.materialsView->model()->rowCount(), 1, &success) - 1;
+      tr("New position (1 - %1):").arg(m_ui->materialsView->model()->rowCount()),
+      curPosition + 1, 1, m_ui->materialsView->model()->rowCount(), 1, &success) - 1;
 
   //Implemented so that the behaviour is consistent with move first/last.
   if (success) {
@@ -581,24 +591,24 @@ void ShapeResource::moveToPaintJobs()
 
 void ShapeResource::materialsContextMenu(const QPoint& /*pos*/)
 {
-  if (m_ui.materialsView->model() && m_ui.materialsView->selectionModel()->hasSelection()) {
-    m_ui.replaceMaterialsAction->setEnabled(true);
-    m_ui.moveFirstPaintJobsAction->setEnabled(true);
-    m_ui.moveUpPaintJobsAction->setEnabled(true);
-    m_ui.moveDownPaintJobsAction->setEnabled(true);
-    m_ui.moveLastPaintJobsAction->setEnabled(true);
-    m_ui.moveToPaintJobsAction->setEnabled(true);
+  if (m_ui->materialsView->model() && m_ui->materialsView->selectionModel()->hasSelection()) {
+    m_ui->replaceMaterialsAction->setEnabled(true);
+    m_ui->moveFirstPaintJobsAction->setEnabled(true);
+    m_ui->moveUpPaintJobsAction->setEnabled(true);
+    m_ui->moveDownPaintJobsAction->setEnabled(true);
+    m_ui->moveLastPaintJobsAction->setEnabled(true);
+    m_ui->moveToPaintJobsAction->setEnabled(true);
   }
   else {
-    m_ui.replaceMaterialsAction->setEnabled(false);
-    m_ui.moveFirstPaintJobsAction->setEnabled(false);
-    m_ui.moveUpPaintJobsAction->setEnabled(false);
-    m_ui.moveDownPaintJobsAction->setEnabled(false);
-    m_ui.moveLastPaintJobsAction->setEnabled(false);
-    m_ui.moveToPaintJobsAction->setEnabled(false);
+    m_ui->replaceMaterialsAction->setEnabled(false);
+    m_ui->moveFirstPaintJobsAction->setEnabled(false);
+    m_ui->moveUpPaintJobsAction->setEnabled(false);
+    m_ui->moveDownPaintJobsAction->setEnabled(false);
+    m_ui->moveLastPaintJobsAction->setEnabled(false);
+    m_ui->moveToPaintJobsAction->setEnabled(false);
   }
 
-  m_ui.materialsMenu->exec(QCursor::pos());
+  m_ui->materialsMenu->exec(QCursor::pos());
 }
 
 void ShapeResource::exportFile()
@@ -645,7 +655,7 @@ void ShapeResource::exportFile()
 
         int prevMat = -1, curMat;
         foreach (const Primitive& primitive, *(m_shapeModel->primitivesList())) {
-          curMat = primitive.materialsModel->materialsList()->at(m_ui.paintJobSpinBox->value() - 1);
+          curMat = primitive.materialsModel->materialsList()->at(m_ui->paintJobSpinBox->value() - 1);
           if (curMat != prevMat) {
             prevMat = curMat;
             out << QString("usemtl Stunts%1").arg(curMat, 3, 10, QChar('0')) << endl;
@@ -810,10 +820,10 @@ void ShapeResource::importFile()
         }
 
         m_shapeModel->setShape(primitives);
-        m_ui.shapeView->reset();
+        m_ui->shapeView->reset();
 
-        m_ui.numPaintJobsSpinBox->setValue(1);
-        m_ui.paintJobSpinBox->setMaximum(1);
+        m_ui->numPaintJobsSpinBox->setValue(1);
+        m_ui->paintJobSpinBox->setMaximum(1);
 
         isModified();
       }
@@ -857,6 +867,6 @@ VerticesList ShapeResource::buildVerticesList(bool boundBox) const
 
 void ShapeResource::isModified()
 {
-  m_ui.shapeView->viewport()->update();
+  m_ui->shapeView->viewport()->update();
   Resource::isModified();
 }

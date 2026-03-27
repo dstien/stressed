@@ -17,16 +17,22 @@
 
 #include "speedresource.h"
 
+#include <QSpinBox>
+
+#include "ui_speedresource.h"
+
 const int SpeedResource::NUM_VALUES;
 
 SpeedResource::SpeedResource(QString id, QWidget* parent, Qt::WindowFlags flags)
-: Resource(id, parent, flags)
+: Resource(id, parent, flags),
+  m_ui(new Ui::SpeedResource)
 {
   setup();
 }
 
 SpeedResource::SpeedResource(const SpeedResource& res)
-: Resource(res.id(), qobject_cast<QWidget*>(res.parent()), res.windowFlags())
+: Resource(res.id(), qobject_cast<QWidget*>(res.parent()), res.windowFlags()),
+  m_ui(new Ui::SpeedResource)
 {
   setup();
 
@@ -36,11 +42,17 @@ SpeedResource::SpeedResource(const SpeedResource& res)
 }
 
 SpeedResource::SpeedResource(QString id, QDataStream* in, QWidget* parent, Qt::WindowFlags flags)
-: Resource(id, parent, flags)
+: Resource(id, parent, flags),
+  m_ui(new Ui::SpeedResource)
 {
   setup();
 
   parse(in);
+}
+
+SpeedResource::~SpeedResource()
+{
+  delete m_ui;
 }
 
 void SpeedResource::parse(QDataStream* in)
@@ -66,22 +78,22 @@ void SpeedResource::write(QDataStream* out) const
 
 void SpeedResource::setup()
 {
-  m_ui.setupUi(this);
+  m_ui->setupUi(this);
 
-  m_spinBoxes[ 0] = m_ui.spinBoxPavedRoad;
-  m_spinBoxes[ 1] = m_ui.spinBoxDirtRoad;
-  m_spinBoxes[ 2] = m_ui.spinBoxIcyRoad;
-  m_spinBoxes[ 3] = m_ui.spinBoxPavedSharpCorner;
-  m_spinBoxes[ 4] = m_ui.spinBoxDirtSharpCorner;
-  m_spinBoxes[ 5] = m_ui.spinBoxIcySharpCorner;
-  m_spinBoxes[ 6] = m_ui.spinBoxPavedCorner;
-  m_spinBoxes[ 7] = m_ui.spinBoxDirtCorner;
-  m_spinBoxes[ 8] = m_ui.spinBoxIcyCorner;
-  m_spinBoxes[ 9] = m_ui.spinBoxBankedCorner;
-  m_spinBoxes[10] = m_ui.spinBoxBridge;
-  m_spinBoxes[11] = m_ui.spinBoxSlalom;
-  m_spinBoxes[12] = m_ui.spinBoxCorkUD;
-  m_spinBoxes[13] = m_ui.spinBoxChicane;
-  m_spinBoxes[14] = m_ui.spinBoxLoop;
-  m_spinBoxes[15] = m_ui.spinBoxCorkLR;
+  m_spinBoxes[ 0] = m_ui->spinBoxPavedRoad;
+  m_spinBoxes[ 1] = m_ui->spinBoxDirtRoad;
+  m_spinBoxes[ 2] = m_ui->spinBoxIcyRoad;
+  m_spinBoxes[ 3] = m_ui->spinBoxPavedSharpCorner;
+  m_spinBoxes[ 4] = m_ui->spinBoxDirtSharpCorner;
+  m_spinBoxes[ 5] = m_ui->spinBoxIcySharpCorner;
+  m_spinBoxes[ 6] = m_ui->spinBoxPavedCorner;
+  m_spinBoxes[ 7] = m_ui->spinBoxDirtCorner;
+  m_spinBoxes[ 8] = m_ui->spinBoxIcyCorner;
+  m_spinBoxes[ 9] = m_ui->spinBoxBankedCorner;
+  m_spinBoxes[10] = m_ui->spinBoxBridge;
+  m_spinBoxes[11] = m_ui->spinBoxSlalom;
+  m_spinBoxes[12] = m_ui->spinBoxCorkUD;
+  m_spinBoxes[13] = m_ui->spinBoxChicane;
+  m_spinBoxes[14] = m_ui->spinBoxLoop;
+  m_spinBoxes[15] = m_ui->spinBoxCorkLR;
 }
