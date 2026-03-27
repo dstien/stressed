@@ -30,9 +30,9 @@ class TextResource : public Resource
   Q_OBJECT
 
 public:
-  TextResource(QString id, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  TextResource(QString id, QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
   TextResource(const TextResource& res);
-  TextResource(QString id, QDataStream* in, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  TextResource(QString id, QDataStream* in, QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
   ~TextResource();
 
   QString           type() const  { return "text"; }

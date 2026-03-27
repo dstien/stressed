@@ -36,7 +36,7 @@ ResourcesModel::ResourcesModel(const ResourcesList& resources, QObject* parent)
 Qt::ItemFlags ResourcesModel::flags(const QModelIndex& index) const
 {
   if (!index.isValid()) {
-    return 0;
+    return Qt::ItemFlags();
   }
 
   return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
@@ -101,7 +101,7 @@ void ResourcesModel::insertRow(Resource* resource, int position)
 bool ResourcesModel::removeRows(int position, int rows, const QModelIndex& index)
 {
   beginRemoveRows(index, position, position + rows - 1);
-  
+
   for (int row = 0; row < rows; row++) {
     m_resources.removeAt(position);
   }
@@ -135,10 +135,10 @@ void ResourcesModel::moveRows(QItemSelectionModel* selectionModel, int direction
 
   // Sort by direction to prevent overwriting.
   if (direction < 0) {
-    qSort(curPersistentRows);
+    std::sort(curPersistentRows.begin(), curPersistentRows.end());
   }
   else {
-    qSort(curPersistentRows.begin(), curPersistentRows.end(), qGreater<QPersistentModelIndex>());
+    std::reverse(curPersistentRows.begin(), curPersistentRows.end());
   }
 
   QPersistentModelIndex persistentCurrent = selectionModel->currentIndex();
@@ -201,7 +201,7 @@ void ResourcesModel::sort(int /*column*/, Qt::SortOrder order)
 {
   beginResetModel();
 
-  qSort(m_resources.begin(), m_resources.end(), (order == Qt::AscendingOrder ? Resource::lessThan : Resource::greaterThan));
+  std::sort(m_resources.begin(), m_resources.end(), (order == Qt::AscendingOrder ? Resource::lessThan : Resource::greaterThan));
 
   endResetModel();
 }

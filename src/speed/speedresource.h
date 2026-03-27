@@ -32,9 +32,9 @@ class SpeedResource : public Resource
   Q_OBJECT
 
 public:
-  SpeedResource(QString id, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  SpeedResource(QString id, QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
   SpeedResource(const SpeedResource& res);
-  SpeedResource(QString id, QDataStream* in, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  SpeedResource(QString id, QDataStream* in, QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
   ~SpeedResource();
 
   QString            type() const  { return "speed"; }

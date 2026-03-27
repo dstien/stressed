@@ -61,7 +61,7 @@ ShapeModel::ShapeModel(const ShapeModel& mod, QObject* parent)
 Qt::ItemFlags ShapeModel::flags(const QModelIndex& index) const
 {
   if (!index.isValid()) {
-    return 0;
+    return Qt::ItemFlags();
   }
 
   switch (index.column()) {
@@ -343,10 +343,10 @@ void ShapeModel::moveRows(QItemSelectionModel* selectionModel, int direction)
 
   // Sort by direction to prevent overwriting.
   if (direction < 0) {
-    qSort(curPersistentRows);
+    std::sort(curPersistentRows.begin(), curPersistentRows.end());
   }
   else {
-    qSort(curPersistentRows.begin(), curPersistentRows.end(), qGreater<QPersistentModelIndex>());
+    std::reverse(curPersistentRows.begin(), curPersistentRows.end());
   }
 
   QPersistentModelIndex persistentCurrent = selectionModel->currentIndex();
@@ -645,10 +645,10 @@ void ShapeModel::movePaintJobs(QItemSelectionModel* selectionModel, int directio
 
   // Sort by direction to make the move "stable" upon reaching the ends of the list.
   if (direction < 0) {
-    qSort(curPersistentRows);
+    std::sort(curPersistentRows.begin(), curPersistentRows.end());
   }
   else {
-    qSort(curPersistentRows.begin(), curPersistentRows.end(), qGreater<QPersistentModelIndex>());
+    std::reverse(curPersistentRows.begin(), curPersistentRows.end());
   }
 
   QPersistentModelIndex persistentCurrent = selectionModel->currentIndex();

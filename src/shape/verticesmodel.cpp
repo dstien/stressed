@@ -46,7 +46,7 @@ VerticesModel::VerticesModel(int type, ShapeModel* parent)
 Qt::ItemFlags VerticesModel::flags(const QModelIndex& index) const
 {
   if (!index.isValid()) {
-    return 0;
+    return Qt::ItemFlags();
   }
 
   return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
@@ -182,7 +182,7 @@ bool VerticesModel::insertRows(int position, int rows, const QModelIndex& index)
 bool VerticesModel::removeRows(int position, int rows, const QModelIndex& index)
 {
   beginRemoveRows(index, position, position + rows - 1);
-  
+
   for (int row = 0; row < rows; row++) {
     m_vertices.removeAt(position);
     m_verticesF.removeAt(position);

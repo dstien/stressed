@@ -46,7 +46,7 @@ MaterialsModel::MaterialsModel(int num, QObject* parent)
 Qt::ItemFlags MaterialsModel::flags(const QModelIndex& index) const
 {
   if (!index.isValid()) {
-    return 0;
+    return Qt::ItemFlags();
   }
 
   return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
@@ -128,7 +128,7 @@ bool MaterialsModel::insertRows(int position, int rows, const QModelIndex& index
 bool MaterialsModel::removeRows(int position, int rows, const QModelIndex& index)
 {
   beginRemoveRows(index, position, position + rows - 1);
-  
+
   for (int row = 0; row < rows; row++) {
     m_materials.removeAt(position);
   }

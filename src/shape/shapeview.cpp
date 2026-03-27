@@ -625,7 +625,7 @@ float ShapeView::distance(const VertexF& v1, const VertexF& v2)
   float dz = v2.z - v1.z;
 
   return sqrt(dx * dx + dy * dy + dz * dz);
-} 
+}
 
 void ShapeView::mousePressEvent(QMouseEvent* event)
 {
@@ -656,7 +656,7 @@ void ShapeView::mouseMoveEvent(QMouseEvent* event)
   else if (event->buttons() & Qt::RightButton) {
     m_rotation.rotate(delta.x() * 0.25f, 0.0f, 0.0f, 1.0f);
   }
-  else if (event->buttons() & Qt::MidButton) {
+  else if (event->buttons() & Qt::MiddleButton) {
     m_translation.translate(delta.x() * 5.0f, 0.0f, -delta.y() * 5.0f);
   }
 

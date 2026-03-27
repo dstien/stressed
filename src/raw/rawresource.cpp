@@ -79,7 +79,7 @@ RawResource::~RawResource()
 {
   delete m_ui;
 }
-  
+
 void RawResource::parse(QDataStream* in)
 {
   quint8 val;
@@ -188,7 +188,7 @@ void RawResource::exportFile()
 
     write(&out);
 
-    out.unsetDevice();
+    out.setDevice(nullptr);
     file.close();
   }
 }
@@ -218,7 +218,7 @@ void RawResource::importFile()
           QCoreApplication::applicationName(),
           tr("Could not open file \"%1\" for reading.").arg(inFileName));
       return;
- 
+
    }
 
    // Find length and re-setup widget.
@@ -230,7 +230,7 @@ void RawResource::importFile()
    in.setByteOrder(QDataStream::LittleEndian);
 
    parse(&in);
- 
+
    file.close();
  }
 }

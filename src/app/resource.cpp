@@ -156,7 +156,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     baseOffset = in.device()->pos();
 
     // Sort by offset so that the sequential data positions can be used to guess the size.
-    qSort(toc.begin(), toc.end(), tocOffsetLessThan);
+    std::sort(toc.begin(), toc.end(), tocOffsetLessThan);
 
     // Set sizes.
     for (int i = 0; i < toc.size(); i++) {
@@ -171,7 +171,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     }
 
     // Restore original order.
-    qSort(toc.begin(), toc.end(), tocPositionLessThan);
+    std::sort(toc.begin(), toc.end(), tocPositionLessThan);
 
     // Get type mapping for registered ids.
     StringMap types = Settings().getStringMap("types");
@@ -274,11 +274,11 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
       }
     }
 
-    in.unsetDevice();
+    in.setDevice(nullptr);
     file.close();
   }
   catch (QString msg) {
-    in.unsetDevice();
+    in.setDevice(nullptr);
     file.close();
 
     delete[] compSrc.data;
@@ -360,7 +360,7 @@ void Resource::write(const QString& fileName, const ResourcesModel* resourcesMod
 
   checkError(&out, tr("final file size"), true);
 
-  out.unsetDevice();
+  out.setDevice(nullptr);
   file.close();
 
   QFileInfo fileInfo(fileName);

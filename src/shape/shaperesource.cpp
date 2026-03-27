@@ -78,7 +78,7 @@ ShapeResource::~ShapeResource()
 {
   delete m_ui;
 }
-  
+
 void ShapeResource::setup()
 {
   m_currentPrimitive = 0;
@@ -639,26 +639,26 @@ void ShapeResource::exportFile()
       QFile objFile(m_currentFilePath);
       if (objFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         QTextStream out(&objFile);
-        out << "# " << Settings::APP_NAME << " - " << Settings::APP_DESC << endl;
-        out << "# " << Settings::ORG_URL << endl;
-        out << tr("# Shape \"%1\" exported from file \"%2\"").arg(id(), fileName()) << endl << endl;
+        out << "# " << Settings::APP_NAME << " - " << Settings::APP_DESC << Qt::endl;
+        out << "# " << Settings::ORG_URL << Qt::endl;
+        out << tr("# Shape \"%1\" exported from file \"%2\"").arg(id(), fileName()) << Qt::endl << Qt::endl;
 
-        out << "mtllib " << MTL_DST << endl << endl;
+        out << "mtllib " << MTL_DST << Qt::endl << Qt::endl;
 
         VerticesList vertices = buildVerticesList();
         foreach (const Vertex& vertex, vertices) {
-          out << "v" << qSetFieldWidth(10) << right << fixed << qSetRealNumberPrecision(1)
-              << (float)vertex.x << (float)vertex.y << (float)vertex.z << reset << endl;
+          out << "v" << qSetFieldWidth(10) << Qt::right << Qt::fixed << qSetRealNumberPrecision(1)
+              << (float)vertex.x << (float)vertex.y << (float)vertex.z << Qt::reset << Qt::endl;
         }
 
-        out << endl;
+        out << Qt::endl;
 
         int prevMat = -1, curMat;
         foreach (const Primitive& primitive, *(m_shapeModel->primitivesList())) {
           curMat = primitive.materialsModel->materialsList()->at(m_ui->paintJobSpinBox->value() - 1);
           if (curMat != prevMat) {
             prevMat = curMat;
-            out << QString("usemtl Stunts%1").arg(curMat, 3, 10, QChar('0')) << endl;
+            out << QString("usemtl Stunts%1").arg(curMat, 3, 10, QChar('0')) << Qt::endl;
           }
 
           switch (primitive.type) {
@@ -675,11 +675,11 @@ void ShapeResource::exportFile()
               out << "f";
           }
 
-          out << qSetFieldWidth(4) << right;
+          out << qSetFieldWidth(4) << Qt::right;
           foreach (const Vertex& vertex, *(primitive.verticesModel->verticesList())) {
             out << vertices.indexOf(vertex) + 1;
           }
-          out << reset << endl;
+          out << Qt::reset << Qt::endl;
 
           if (out.status()) {
             throw tr("Couldn't write to file.");
@@ -756,7 +756,7 @@ void ShapeResource::importFile()
                     throw tr("Found primitive before any vertices.");
                   }
 
-                  QStringList tokens = line.split(OBJ_REGEXP_WHITESPACE, QString::SkipEmptyParts);
+                  QStringList tokens = line.split(OBJ_REGEXP_WHITESPACE, Qt::SkipEmptyParts);
 
                   Primitive primitive;
                   int numVertices = tokens.size() - 1;

@@ -38,7 +38,7 @@ const char BitmapResource::FILE_FILTERS[] =
     "All files (*)";
 
 BitmapResource::BitmapResource(QString id, QWidget* parent, Qt::WindowFlags flags)
-: Resource(id, parent, flags), 
+: Resource(id, parent, flags),
   m_ui(new Ui::BitmapResource)
 {
   setup();
@@ -57,7 +57,7 @@ BitmapResource::BitmapResource(QString id, QWidget* parent, Qt::WindowFlags flag
 }
 
 BitmapResource::BitmapResource(const BitmapResource& res)
-: Resource(res.id(), dynamic_cast<QWidget*>(res.parent()), res.windowFlags()), 
+: Resource(res.id(), dynamic_cast<QWidget*>(res.parent()), res.windowFlags()),
   m_ui(new Ui::BitmapResource)
 {
   setup();
@@ -353,7 +353,7 @@ void BitmapResource::importFile()
       // Quantize alpha channel to 1 bit and set affected transparent pixels
       // to palette index 255.
       if (m_image->hasAlphaChannel()) {
-        const QImage& alphaChannel = m_image->alphaChannel();
+        const QImage alphaChannel = m_image->convertToFormat(QImage::Format_Alpha8);
 
         for (int y = 0; y < m_image->height(); y++) {
           for (int x = 0; x < m_image->width(); x++) {
