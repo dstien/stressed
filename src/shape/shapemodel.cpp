@@ -106,6 +106,7 @@ QVariant ShapeModel::data(const QModelIndex& index, int role) const
       if (col == 0) {
         return TYPES()[m_primitives[row].type - 1];
       }
+      [[fallthrough]]; // Same data in DisplayRole and EditRole.
     case Qt::EditRole:
       if (col == 0) {
         return m_primitives[row].type;

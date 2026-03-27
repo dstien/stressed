@@ -76,7 +76,7 @@ QVariant VerticesModel::data(const QModelIndex& index, int role) const
       else if (col == 2) {
         return m_vertices[row].z;
       }
-
+      [[fallthrough]];
     default:
       return QVariant();
   }

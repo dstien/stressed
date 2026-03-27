@@ -34,9 +34,9 @@ const char RawResource::FILE_FILTERS[] = "All files (*)";
 
 RawResource::RawResource(QString id, QString type, unsigned int length, QWidget* parent, Qt::WindowFlags flags)
 : Resource(id, parent, flags),
+  m_ui(new Ui::RawResource),
   m_type(type),
-  m_length(length),
-  m_ui(new Ui::RawResource)
+  m_length(length)
 {
   m_ui->setupUi(this);
 
@@ -49,9 +49,9 @@ RawResource::RawResource(QString id, QString type, unsigned int length, QWidget*
 
 RawResource::RawResource(const RawResource& res)
 : Resource(res.id(), qobject_cast<QWidget*>(res.parent()), res.windowFlags()),
+  m_ui(new Ui::RawResource),
   m_type(res.m_type),
-  m_length(res.m_length),
-  m_ui(new Ui::RawResource)
+  m_length(res.m_length)
 {
   m_ui->setupUi(this);
 
@@ -64,9 +64,9 @@ RawResource::RawResource(const RawResource& res)
 
 RawResource::RawResource(QString id, QString type, unsigned int length, QDataStream* in, QWidget* parent, Qt::WindowFlags flags)
 : Resource(id, parent, flags),
+  m_ui(new Ui::RawResource),
   m_type(type),
-  m_length(length),
-  m_ui(new Ui::RawResource)
+  m_length(length)
 {
   m_ui->setupUi(this);
 
