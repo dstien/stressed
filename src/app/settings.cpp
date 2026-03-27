@@ -4,14 +4,15 @@
 #include "settings.h"
 
 const char Settings::APP_NAME[]    = "stressed";
-const char Settings::APP_VER[]     = "0.2.1";
+const char Settings::APP_VER[]     = "0.3.0";
 const char Settings::APP_DESC[]    = "Stunts/4D [Sports] Driving resource editor";
 const char Settings::APP_AUTHOR[]  = "Daniel Stien";
 const char Settings::APP_CONTACT[] = "daniel@stien.org";
 
-const char Settings::ORG_NAME[] = "stuntstools";
-const char Settings::ORG_URL[]  = "https://github.com/dstien/gameformats/tree/master/stunts/stressed";
-const char Settings::MAN_URL[]  = "http://wiki.stunts.hu/index.php/Stressed_user_reference";
+const char Settings::ORG_NAME[]    = "stuntstools";
+const char Settings::ORG_URL[]     = "https://github.com/dstien/stressed";
+const char Settings::CONTRIB_URL[] = "https://github.com/dstien/stressed/graphs/contributors";
+const char Settings::MAN_URL[]     = "http://wiki.stunts.hu/wiki/Stressed_user_reference";
 
 const char Settings::DEFAULTS[] = ":/conf/defaults.conf";
 

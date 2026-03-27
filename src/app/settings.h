@@ -44,6 +44,7 @@ public:
   static const char APP_CONTACT[];
   static const char ORG_NAME[];
   static const char ORG_URL[];
+  static const char CONTRIB_URL[];
   static const char MAN_URL[];
 
   static const char DEFAULTS[];
