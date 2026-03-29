@@ -230,7 +230,7 @@ Materials Settings::getMaterials()
   QStringList colors = value(PATH_MATERIALS_COLORS).toStringList();
   QStringList patterns = value(PATH_MATERIALS_PATTERNS).toStringList();
 
-  if (colors.empty() | patterns.empty()) {
+  if (colors.empty() || patterns.empty()) {
     return restoreMaterials();
   }
 
