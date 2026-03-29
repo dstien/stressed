@@ -211,7 +211,6 @@ void ShapeView::draw(bool pick)
     MaterialsList* materialsList = primitive.materialsModel->materialsList();
 
     int material = materialsList->at(m_currentPaintJob);
-    QColor color;
 
     bool selected = false, pattern = false;
 
