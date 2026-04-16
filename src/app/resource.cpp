@@ -245,6 +245,16 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         typeOverride = false;
       }
 
+      if (type.isEmpty()) {
+        if (isGpcExtension) {
+          type = "bitmap";
+        }
+        else {
+          type = tr("unknown");
+          throw tr("Unknown type.");
+        }
+      }
+
       resource = 0;
 
       try {
