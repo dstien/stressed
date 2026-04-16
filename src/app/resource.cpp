@@ -224,20 +224,21 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
       in.device()->seek(baseOffset + resOffset);
 
       if (!typeOverride) {
-        type = types[toc[i].id];
+        if (isGpcExtension) {
+          type = "bitmap";
+        }
+        else
+        {
+          type = types[toc[i].id];
+        }
       }
       else {
         typeOverride = false;
       }
 
       if (type.isEmpty()) {
-        if (isGpcExtension) {
-          type = "bitmap";
-        }
-        else {
-          type = tr("unknown");
-          throw tr("Unknown type.");
-        }
+        type = tr("unknown");
+        throw tr("Unknown type.");
       }
 
       resource = 0;

@@ -297,9 +297,6 @@
        <property name="text">
         <string>&amp;1X</string>
        </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
       </widget>
      </item>
      <item>
@@ -313,6 +310,9 @@
       <widget class="QRadioButton" name="radioScale4">
        <property name="text">
         <string>&amp;4X</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

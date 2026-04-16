@@ -249,9 +249,11 @@ void BitmapResource::parsePes(QDataStream* in, quint16 width, quint16 height,
       throw tr("Couldn't read sprite data.");
     }
 
-    int transposed = (unk2 & 0x10) != 0;
+    quint8 unks[] = {unk0, unk1, unk2, unk3};
+    int transposed_bitmask = unks[2] >> 4 & 0xF;
 
     for (int plane = 0; plane < 4; plane++) {
+      int transposed = (transposed_bitmask >> plane) & 0x1;
       int planeStartBit = plane * width * height;
       for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -279,19 +281,14 @@ void BitmapResource::parsePes(QDataStream* in, quint16 width, quint16 height,
     m_image = new QImage(width, height, QImage::Format_Indexed8);
     m_image->setColorTable(Settings::m_loadedPalette);
 
-    quint8 mask0 = unk0 & 0x0F;
-    quint8 mask1 = unk1 & 0x0F;
-    quint8 mask2 = unk2 & 0x0F;
-    quint8 mask3 = unk3 & 0x0F;
-
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         int idx = y * width + x;
 
-        int color_index = (bitPlanes[3][idx] * mask3) +
-                         (bitPlanes[2][idx] * mask2) +
-                         (bitPlanes[1][idx] * mask1) +
-                         (bitPlanes[0][idx] * mask0);
+        int color_index = (bitPlanes[3][idx] * (unks[3] & 0x0F)) +
+                          (bitPlanes[2][idx] * (unks[2] & 0x0F)) +
+                          (bitPlanes[1][idx] * (unks[1] & 0x0F)) +
+                          (bitPlanes[0][idx] * (unks[0] & 0x0F));
         m_image->setPixel(x, y, color_index & 0xFF);
       }
     }
