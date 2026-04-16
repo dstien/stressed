@@ -21,6 +21,7 @@ public:
   Resource*            clone() const { return new BitmapResource(*this); }
 
   static void          setPesMode(bool pes) { m_pesMode = pes; }
+  static void          setTocSize(quint32 size) { m_tocSize = size; }
 
 protected:
   void                 parse(QDataStream* in);
@@ -35,7 +36,7 @@ private slots:
 private:
   void                 setup();
   void                 parsePes(QDataStream* in, quint16 width, quint16 height,
-                                quint8 unk0, quint8 unk1, quint8 unk2, quint8 unk3);
+                                quint32 tocSize, quint8 unk0, quint8 unk1, quint8 unk2, quint8 unk3);
 
   Ui::BitmapResource*   m_ui;
 
@@ -45,6 +46,7 @@ private:
 
   static QString       m_currentFilePath;
   static QString       m_currentFileFilter;
+  static quint32       m_tocSize;
 
   static const char    FILE_SETTINGS_PATH[];
   static const char    FILE_FILTERS[];

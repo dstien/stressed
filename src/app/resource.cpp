@@ -57,13 +57,8 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     quint32 reportedSize;
     in >> reportedSize;
 
-    fprintf(stderr, "DEBUG: fileSize=%llu, reportedSize=%u (0x%x), ext=%s\n",
-            (unsigned long long)fileSize, reportedSize, reportedSize, qPrintable(ext));
-
     // First byte of reportedSize tells us the compression format
     quint8 firstByte = reportedSize & 0xFF;
-
-    // Not a valid resource file, try decompression.
     if (reportedSize != fileSize) {
       quint8 compType = reportedSize & STPK_PASSES_MASK;
       quint32 decompSize = reportedSize >> 8;
@@ -97,21 +92,15 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
           throw tr("Decompression failed with message \"%1\"").arg(errStr).simplified();
         }
 
-        fprintf(stderr, "DEBUG STUNTS: decompressed size = %u\n", compDst.len);
         buf.setData((char*)compDst.data, compDst.len);
         buf.open(QIODevice::ReadOnly);
-        fprintf(stderr, "DEBUG: after setData buf.size=%lld\n", (long long)buf.size());
         in.setDevice(&buf);
-        in.resetStatus();
-        fprintf(stderr, "DEBUG: after setDevice, in.status=%d, buf.pos=%lld, buf.size=%lld\n",
-                in.status(), (long long)buf.pos(), (long long)buf.size());
 
         actualSize = compDst.len;
         delete[] compDst.data;
         compDst.data = NULL;
       }
       else if (firstByte != 0x82 && isGpcExtension) {
-        fprintf(stderr, "DEBUG: Entering GPC branch, firstByte=0x%02x, isGpcExt=%d\n", firstByte, isGpcExtension);
         // GPC compression format (only for .PES/.PCS files)
         gpc_Buffer gpcSrc, gpcDst;
         gpcSrc.data = NULL;
@@ -119,7 +108,6 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
 
         try {
           gpcSrc.data = new uchar[fileSize];
-          fprintf(stderr, "DEBUG: Allocated %llu bytes\n", (unsigned long long)fileSize);
         }
         catch (std::bad_alloc& exc) {
           throw tr("Couldn't allocate memory for compressed file.");
@@ -127,7 +115,6 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
 
         file.seek(0);
         qint64 bytesRead = file.read((char*)gpcSrc.data, fileSize);
-        fprintf(stderr, "DEBUG: Read %lld bytes\n", (long long)bytesRead);
         if (bytesRead != (qint64)fileSize) {
           delete[] gpcSrc.data;
           throw tr("Couldn't read compressed data to memory.");
@@ -136,10 +123,8 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         gpcSrc.offset = 0;
         gpcDst.offset = 0;
 
-        fprintf(stderr, "DEBUG: Calling gpc_decomp...\n");
         char errStr[256];
         int res = gpc_decomp(&gpcSrc, &gpcDst, errStr);
-        fprintf(stderr, "DEBUG: gpc_decomp returned %d\n", res);
 
         delete[] gpcSrc.data;
         gpcSrc.data = NULL;
@@ -152,27 +137,21 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
           throw tr("GPC decompression failed with message \"%1\"").arg(errStr).simplified();
         }
 
-        fprintf(stderr, "DEBUG: Decompressed to %u bytes\n", gpcDst.len);
         buf.setData((char*)gpcDst.data, gpcDst.len);
         buf.open(QIODevice::ReadOnly);
         in.setDevice(&buf);
 
-        fprintf(stderr, "DEBUG: Buffer opened, reading decompressed header...\n");
         quint32 decompReportedSize;
         in >> decompReportedSize;
-        fprintf(stderr, "DEBUG: Decompressed header reports size=%u\n", decompReportedSize);
 
         actualSize = gpcDst.len;
         delete[] gpcDst.data;
         gpcDst.data = NULL;
 
-        fprintf(stderr, "DEBUG: Resetting stream position to 0 for re-reading header\n");
         in.device()->seek(0);
       }
       // Data doesn't fit compression header, give up.
       else {
-        fprintf(stderr, "DEBUG: Falling through - firstByte=0x%02x, isGpcExt=%d, ext=%s, compType=%d\n",
-                firstByte, isGpcExtension, qPrintable(ext), compType);
         throw tr("Invalid file. Reported size (%1) doesn't match actual file size (%2) or compression header.").arg(reportedSize).arg(file.size());
       }
     }
@@ -242,10 +221,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
 
     for (int i = 0; i < numResources; i++) {
       quint32 resOffset = toc[i].offset;
-      in.resetStatus();
       in.device()->seek(baseOffset + resOffset);
-      fprintf(stderr, "DEBUG RES: id='%s' offset=0x%04x (%u) size=%u\n",
-              qPrintable(toc[i].id), resOffset, resOffset, toc[i].size);
 
       if (!typeOverride) {
         type = types[toc[i].id];
@@ -276,6 +252,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         else if (type == "bitmap") {
           if (isGpcExtension) {
             BitmapResource::setPesMode(true);
+            BitmapResource::setTocSize(toc[i].size);
           }
           resource = new BitmapResource(toc[i].id, &in);
           if (isGpcExtension) {
@@ -491,14 +468,6 @@ void Resource::isModified()
 void Resource::checkError(QDataStream* stream, const QString& what, bool write)
 {
   QString action = write ? tr("writing") : tr("reading");
-
-  fprintf(stderr, "DEBUG checkError: status=%d (%s) pos=%lld size=%lld\n",
-          stream->status(),
-          stream->status() == 0 ? "Ok" :
-          stream->status() == 1 ? "ReadPastEnd" :
-          stream->status() == 2 ? "ReadCorruptData" : "Other",
-          (long long)stream->device()->pos(),
-          (long long)stream->device()->size());
 
   switch (stream->status()) {
     case QDataStream::Ok:
