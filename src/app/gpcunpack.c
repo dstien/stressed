@@ -152,12 +152,12 @@ static uint32_t gpc_single_pass(const uint8_t *src, uint32_t src_len,
  * 
  * GPC compressed format:
  *   Offset 0: uint32 decomp_size (little-endian)
- *   Offset 4: compressed data
- *     - 1 byte: escape code count (bits 0-6) + mode flag (bit 7)
- *       bit 7 = 0: RLE mode (sequence pass + single pass)
- *       bit 7 = 1: TABLE mode (single pass only)
- *     - N bytes: escape codes (N = byte[0] & 0x7f)
- *     - remaining: compressed data
+ *   Offset 4: uint32 comp_size (little-endian)
+ *   Offset 8: 1 byte: escape code count (bits 0-6) + mode flag (bit 7)
+ *             bit 7 = 0: RLE mode (sequence pass + single pass)
+ *             bit 7 = 1: TABLE mode (single pass only)
+ *   Offset 9: N bytes: escape codes (N = byte[8] & 0x7f)
+ *   Offset 9+N: M bytes: compressed data (M = word[4])
  */
 int gpc_decomp(gpc_Buffer *src, gpc_Buffer *dst, char *err)
 {
@@ -168,9 +168,9 @@ int gpc_decomp(gpc_Buffer *src, gpc_Buffer *dst, char *err)
         return -1;
     }
     
-    if (src->len < 4) {
+    if (src->len < 9) {
         if (err) {
-            snprintf(err, GPC_ERR_BUF_SIZE, "Source buffer too small");
+            snprintf(err, GPC_ERR_BUF_SIZE, "Source buffer too small for header");
         }
         return -1;
     }
@@ -179,6 +179,10 @@ int gpc_decomp(gpc_Buffer *src, gpc_Buffer *dst, char *err)
     uint32_t decomp_size = src->data[0] | (src->data[1] << 8) |
                            (src->data[2] << 16) | (src->data[3] << 24);
     
+    /* Read compressed size (uint32 little-endian) */
+    uint32_t comp_size = src->data[4] | (src->data[5] << 8) |
+                         (src->data[6] << 16) | (src->data[7] << 24);
+    
     if (decomp_size == 0 || decomp_size > 0xFFFFFF) {
         if (err) {
             snprintf(err, GPC_ERR_BUF_SIZE, "Invalid decompressed size: 0x%08x", decomp_size);
@@ -186,19 +190,12 @@ int gpc_decomp(gpc_Buffer *src, gpc_Buffer *dst, char *err)
         return -1;
     }
     
-    /* Read compression header */
-    if (src->len < 5) {
-        if (err) {
-            snprintf(err, GPC_ERR_BUF_SIZE, "Source buffer too small for header");
-        }
-        return -1;
-    }
+    /* Read escape code count and mode */
+    uint8_t esc_count = src->data[8] & 0x7F;
+    int mode_table = (src->data[8] & 0x80) != 0;
     
-    uint8_t esc_count = src->data[4] & 0x7F;
-    int mode_table = (src->data[4] & 0x80) != 0;
-    
-    /* Header size: 4 (size) + 1 (esc count) + esc_count (escape codes) = 5 + esc_count */
-    uint32_t header_size = 5 + esc_count;
+    /* Header size: 9 (sizes + esc count) + esc_count (escape codes) = 9 + esc_count */
+    uint32_t header_size = 9 + esc_count;
     
     if (src->len < header_size) {
         if (err) {
@@ -212,15 +209,15 @@ int gpc_decomp(gpc_Buffer *src, gpc_Buffer *dst, char *err)
     memset(esc_lookup, 0, sizeof(esc_lookup));
     
     for (uint8_t idx = 0; idx < esc_count; idx++) {
-        esc_lookup[src->data[5 + idx]] = idx + 1;
+        esc_lookup[src->data[9 + idx]] = idx + 1;
     }
     
     /* Sentinel is escape_codes[1] */
-    uint8_t sentinel = (esc_count > 1) ? src->data[6] : 0;
+    uint8_t sentinel = (esc_count > 1) ? src->data[10] : 0;
     
-    /* Compressed data starts after header */
+    /* Compressed data starts after header, limited by comp_size */
     uint32_t comp_offset = header_size;
-    uint32_t comp_len = src->len - comp_offset;
+    uint32_t comp_len = comp_size;
     
     if (mode_table) {
         /* TABLE mode: single pass only */

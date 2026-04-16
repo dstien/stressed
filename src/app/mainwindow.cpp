@@ -72,6 +72,8 @@ void MainWindow::loadFile(const QString& fileName)
         QCoreApplication::applicationName(),
         tr("Error loading \"%1\":\n%2").arg(fileName, msg));
 
+    fprintf(stderr, "ERROR LOADING: %s\n", qPrintable(msg));
+
     reset();
   }
 }

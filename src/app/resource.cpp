@@ -39,6 +39,10 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
 
   quint32 baseOffset;
 
+  // Check file extension for GPC detection (case-insensitive)
+  QString ext = QFileInfo(fileName).suffix().toUpper();
+  bool isGpcExtension = (ext == "PES" || ext == "PCS");
+
   QFile file(fileName);
 
   if (!file.open(QIODevice::ReadOnly)) {
@@ -52,6 +56,9 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     quint64 fileSize = file.size(), actualSize;
     quint32 reportedSize;
     in >> reportedSize;
+
+    fprintf(stderr, "DEBUG: fileSize=%llu, reportedSize=%u (0x%x), ext=%s\n",
+            (unsigned long long)fileSize, reportedSize, reportedSize, qPrintable(ext));
 
     // First byte of reportedSize tells us the compression format
     quint8 firstByte = reportedSize & 0xFF;
@@ -98,21 +105,25 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         delete[] compDst.data;
         compDst.data = NULL;
       }
-      else if (firstByte != 0x82) {
-        // GPC compression format
+      else if (firstByte != 0x82 && isGpcExtension) {
+        fprintf(stderr, "DEBUG: Entering GPC branch, firstByte=0x%02x, isGpcExt=%d\n", firstByte, isGpcExtension);
+        // GPC compression format (only for .PES/.PCS files)
         gpc_Buffer gpcSrc, gpcDst;
         gpcSrc.data = NULL;
         gpcDst.data = NULL;
 
         try {
           gpcSrc.data = new uchar[fileSize];
+          fprintf(stderr, "DEBUG: Allocated %llu bytes\n", (unsigned long long)fileSize);
         }
         catch (std::bad_alloc& exc) {
           throw tr("Couldn't allocate memory for compressed file.");
         }
 
         file.seek(0);
-        if (file.read((char*)gpcSrc.data, fileSize) != (qint64)fileSize) {
+        qint64 bytesRead = file.read((char*)gpcSrc.data, fileSize);
+        fprintf(stderr, "DEBUG: Read %lld bytes\n", (long long)bytesRead);
+        if (bytesRead != (qint64)fileSize) {
           delete[] gpcSrc.data;
           throw tr("Couldn't read compressed data to memory.");
         }
@@ -120,8 +131,10 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         gpcSrc.offset = 0;
         gpcDst.offset = 0;
 
+        fprintf(stderr, "DEBUG: Calling gpc_decomp...\n");
         char errStr[256];
         int res = gpc_decomp(&gpcSrc, &gpcDst, errStr);
+        fprintf(stderr, "DEBUG: gpc_decomp returned %d\n", res);
 
         delete[] gpcSrc.data;
         gpcSrc.data = NULL;
@@ -134,16 +147,27 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
           throw tr("GPC decompression failed with message \"%1\"").arg(errStr).simplified();
         }
 
+        fprintf(stderr, "DEBUG: Decompressed to %u bytes\n", gpcDst.len);
         buf.setData((char*)gpcDst.data, gpcDst.len);
         buf.open(QIODevice::ReadOnly);
         in.setDevice(&buf);
 
+        fprintf(stderr, "DEBUG: Buffer opened, reading decompressed header...\n");
+        quint32 decompReportedSize;
+        in >> decompReportedSize;
+        fprintf(stderr, "DEBUG: Decompressed header reports size=%u\n", decompReportedSize);
+
         actualSize = gpcDst.len;
         delete[] gpcDst.data;
         gpcDst.data = NULL;
+
+        fprintf(stderr, "DEBUG: Resetting stream position to 0 for re-reading header\n");
+        in.device()->seek(0);
       }
       // Data doesn't fit compression header, give up.
       else {
+        fprintf(stderr, "DEBUG: Falling through - firstByte=0x%02x, isGpcExt=%d, ext=%s, compType=%d\n",
+                firstByte, isGpcExtension, qPrintable(ext), compType);
         throw tr("Invalid file. Reported size (%1) doesn't match actual file size (%2) or compression header.").arg(reportedSize).arg(file.size());
       }
     }
