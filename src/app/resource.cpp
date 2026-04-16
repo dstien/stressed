@@ -14,6 +14,7 @@
 #include "resourcesmodel.h"
 #include "settings.h"
 #include "stunpack.h"
+#include "gpcunpack.h"
 
 const QStringList Resource::TYPES = (QStringList() << tr("Animation") << tr("Bitmap") << tr("Path") << tr("Shape") << tr("Speed") << tr("Text") << tr("Tuning"));
 const QStringList Resource::LOAD_TYPES = (QStringList() << tr("Ignore this resource") << tr("Raw data") << Resource::TYPES);
@@ -52,12 +53,16 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     quint32 reportedSize;
     in >> reportedSize;
 
+    // First byte of reportedSize tells us the compression format
+    quint8 firstByte = reportedSize & 0xFF;
+
     // Not a valid resource file, try decompression.
     if (reportedSize != fileSize) {
       quint8 compType = reportedSize & STPK_PASSES_MASK;
       quint32 decompSize = reportedSize >> 8;
 
-      if ((compType >= 1) && (compType <= 2) && (fileSize <= STPK_MAX_SIZE) && (fileSize < decompSize)) {
+      if (firstByte == 0x82 && (compType >= 1) && (compType <= 2) && (fileSize <= STPK_MAX_SIZE) && (fileSize < decompSize)) {
+        // Stunts compression format
         compSrc.len = fileSize;
         compSrc.offset = compDst.offset = 0;
 
@@ -92,6 +97,50 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         actualSize = compDst.len;
         delete[] compDst.data;
         compDst.data = NULL;
+      }
+      else if (firstByte != 0x82) {
+        // GPC compression format
+        gpc_Buffer gpcSrc, gpcDst;
+        gpcSrc.data = NULL;
+        gpcDst.data = NULL;
+
+        try {
+          gpcSrc.data = new uchar[fileSize];
+        }
+        catch (std::bad_alloc& exc) {
+          throw tr("Couldn't allocate memory for compressed file.");
+        }
+
+        file.seek(0);
+        if (file.read((char*)gpcSrc.data, fileSize) != (qint64)fileSize) {
+          delete[] gpcSrc.data;
+          throw tr("Couldn't read compressed data to memory.");
+        }
+        gpcSrc.len = fileSize;
+        gpcSrc.offset = 0;
+        gpcDst.offset = 0;
+
+        char errStr[256];
+        int res = gpc_decomp(&gpcSrc, &gpcDst, errStr);
+
+        delete[] gpcSrc.data;
+        gpcSrc.data = NULL;
+
+        if (res) {
+          if (gpcDst.data) {
+            delete[] gpcDst.data;
+          }
+          errStr[255] = '\0';
+          throw tr("GPC decompression failed with message \"%1\"").arg(errStr).simplified();
+        }
+
+        buf.setData((char*)gpcDst.data, gpcDst.len);
+        buf.open(QIODevice::ReadOnly);
+        in.setDevice(&buf);
+
+        actualSize = gpcDst.len;
+        delete[] gpcDst.data;
+        gpcDst.data = NULL;
       }
       // Data doesn't fit compression header, give up.
       else {

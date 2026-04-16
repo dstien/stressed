@@ -9,6 +9,7 @@ add_executable(app
     resourcesmodel.cpp
     settings.cpp
     stunpack.c
+    gpcunpack.c
 
     mainwindow.ui
 
@@ -17,6 +18,7 @@ add_executable(app
     resourcesmodel.h
     settings.h
     stunpack.h
+    gpcunpack.h
 
     ../../resources/resources.qrc
 )
