@@ -42,6 +42,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
   // Check file extension for GPC detection (case-insensitive)
   QString ext = QFileInfo(fileName).suffix().toUpper();
   bool isGpcExtension = (ext == "PES" || ext == "PCS");
+  bool isEshExtension = (ext == "ESH");
 
   QFile file(fileName);
 
@@ -57,9 +58,9 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     quint32 reportedSize;
     in >> reportedSize;
 
-    // First byte of reportedSize tells us the compression format
-    quint8 firstByte = reportedSize & 0xFF;
+    // Not a valid resource file, try decompression.
     if (reportedSize != fileSize) {
+      quint8 firstByte = reportedSize & 0xFF;
       quint8 compType = reportedSize & STPK_PASSES_MASK;
       quint32 decompSize = reportedSize >> 8;
 
@@ -150,7 +151,6 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
 
         in.device()->seek(0);
       }
-      // Data doesn't fit compression header, give up.
       else {
         throw tr("Invalid file. Reported size (%1) doesn't match actual file size (%2) or compression header.").arg(reportedSize).arg(file.size());
       }
@@ -158,6 +158,12 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     else {
       file.seek(0);
       actualSize = reportedSize;
+    }
+
+    // ESH files are uncompressed - treat them as PES format
+    if (isEshExtension) {
+      in.device()->seek(0);
+      isGpcExtension = true;
     }
 
     // Decompression done, restart parsing.
@@ -219,7 +225,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     QString type;
     bool typeOverride = false;
 
-    for (int i = 0; i < numResources; i++) {
+    for (int i = 0; i < numResources - 1; i++) {
       quint32 resOffset = toc[i].offset;
       in.device()->seek(baseOffset + resOffset);
 
@@ -227,8 +233,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         if (isGpcExtension) {
           type = "bitmap";
         }
-        else
-        {
+        else {
           type = types[toc[i].id];
         }
       }
@@ -237,8 +242,13 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
       }
 
       if (type.isEmpty()) {
-        type = tr("unknown");
-        throw tr("Unknown type.");
+        if (isGpcExtension) {
+          type = "bitmap";
+        }
+        else {
+          type = tr("unknown");
+          throw tr("Unknown type.");
+        }
       }
 
       resource = 0;

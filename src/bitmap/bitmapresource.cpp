@@ -4,6 +4,8 @@
 #include <QIntValidator>
 #include <QMessageBox>
 
+#include <vector>
+
 #include "app/settings.h"
 #include "bitmapresource.h"
 
@@ -226,88 +228,54 @@ void BitmapResource::parsePes(QDataStream* in, quint16 width, quint16 height,
 
   int headerSize = 16;
   int tocSpriteSize = (tocSize > (quint32)headerSize) ? (tocSize - headerSize) : 0;
-  int spriteDataLen = width * height * 4 / 8;
 
-  unsigned char* spriteData = 0;
-  unsigned char* bitPlanes[4] = {0};
+  std::vector<unsigned char> spriteData(tocSpriteSize, 0);
+  in->readRawData((char*)spriteData.data(), tocSpriteSize);
 
-  try {
-    try {
-      spriteData = new unsigned char[spriteDataLen];
-      memset(spriteData, 0, spriteDataLen);
-      for (int i = 0; i < 4; i++) {
-        bitPlanes[i] = new unsigned char[width * height];
-        memset(bitPlanes[i], 0, width * height);
-      }
-    }
-    catch (std::bad_alloc& exc) {
-      throw tr("Couldn't allocate memory for image data.");
-    }
+  std::vector<std::vector<unsigned char>> bitPlanes(4, std::vector<unsigned char>(width * height, 0));
 
-    qint64 bytesRead = in->readRawData((char*)spriteData, tocSpriteSize);
-    if (bytesRead < 0) {
-      throw tr("Couldn't read sprite data.");
-    }
+  quint8 unks[] = {unk0, unk1, unk2, unk3};
+  int transposed_bitmask = unks[2] >> 4 & 0xF;
 
-    quint8 unks[] = {unk0, unk1, unk2, unk3};
-    int transposed_bitmask = unks[2] >> 4 & 0xF;
-
-    for (int plane = 0; plane < 4; plane++) {
-      int transposed = (transposed_bitmask >> plane) & 0x1;
-      int planeStartBit = plane * width * height;
-      for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-          int bit_idx;
-          if (transposed) {
-            bit_idx = planeStartBit + 8 * ((x / 8) * height + y) + (x % 8);
-          } else {
-            bit_idx = planeStartBit + y * width + x;
-          }
-
-          int byte_idx = bit_idx / 8;
-          int bit_pos = 7 - (bit_idx % 8);
-
-          unsigned char bit = 0;
-          if (byte_idx < spriteDataLen) {
-            bit = (spriteData[byte_idx] >> bit_pos) & 1;
-          }
-
-          int idx = y * width + x;
-          bitPlanes[plane][idx] = bit;
-        }
-      }
-    }
-
-    m_image = new QImage(width, height, QImage::Format_Indexed8);
-    m_image->setColorTable(Settings::m_loadedPalette);
-
+  for (int plane = 0; plane < 4; plane++) {
+    int transposed = (transposed_bitmask >> plane) & 0x1;
+    int planeStartBit = plane * width * height;
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-        int idx = y * width + x;
+        int bit_idx;
+        if (transposed) {
+          bit_idx = planeStartBit + 8 * ((x / 8) * height + y) + (x % 8);
+        } else {
+          bit_idx = planeStartBit + y * width + x;
+        }
 
-        int color_index = (bitPlanes[3][idx] * (unks[3] & 0x0F)) +
-                          (bitPlanes[2][idx] * (unks[2] & 0x0F)) +
-                          (bitPlanes[1][idx] * (unks[1] & 0x0F)) +
-                          (bitPlanes[0][idx] * (unks[0] & 0x0F));
-        m_image->setPixel(x, y, color_index & 0xFF);
+        int byte_idx = bit_idx / 8;
+        int bit_pos = 7 - (bit_idx % 8);
+
+        unsigned char bit = 0;
+        if (byte_idx < tocSpriteSize) {
+          bit = (spriteData[byte_idx] >> bit_pos) & 1;
+        }
+
+        int idx = y * width + x;
+        bitPlanes[plane][idx] = bit;
       }
     }
   }
-  catch (QString msg) {
-    delete[] spriteData;
-    for (int i = 0; i < 4; i++) {
-      delete[] bitPlanes[i];
+
+  m_image = new QImage(width, height, QImage::Format_Indexed8);
+  m_image->setColorTable(Settings::m_loadedPalette);
+
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      int idx = y * width + x;
+
+      int color_index = (bitPlanes[3][idx] * (unks[3] & 0x0F)) +
+                        (bitPlanes[2][idx] * (unks[2] & 0x0F)) +
+                        (bitPlanes[1][idx] * (unks[1] & 0x0F)) +
+                        (bitPlanes[0][idx] * (unks[0] & 0x0F));
+      m_image->setPixel(x, y, color_index & 0xFF);
     }
-
-    delete m_image;
-    m_image = 0;
-
-    throw msg;
-  }
-
-  delete[] spriteData;
-  for (int i = 0; i < 4; i++) {
-    delete[] bitPlanes[i];
   }
 
   m_ui->buttonExport->setEnabled(true);
