@@ -231,15 +231,18 @@ void BitmapResource::parsePes(QDataStream* in, quint16 width, quint16 height,
   try {
     try {
       spriteData = new unsigned char[spriteDataLen];
+      memset(spriteData, 0, spriteDataLen);
       for (int i = 0; i < 4; i++) {
         bitPlanes[i] = new unsigned char[width * height];
+        memset(bitPlanes[i], 0, width * height);
       }
     }
     catch (std::bad_alloc& exc) {
       throw tr("Couldn't allocate memory for image data.");
     }
 
-    if (in->readRawData((char*)spriteData, spriteDataLen) != spriteDataLen) {
+    qint64 bytesRead = in->readRawData((char*)spriteData, spriteDataLen);
+    if (bytesRead < 0) {
       throw tr("Couldn't read sprite data.");
     }
 

@@ -236,7 +236,10 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     bool typeOverride = false;
 
     for (int i = 0; i < numResources; i++) {
-      in.device()->seek(baseOffset + toc[i].offset);
+      quint32 resOffset = toc[i].offset;
+      in.device()->seek(baseOffset + resOffset);
+      fprintf(stderr, "DEBUG RES: id='%s' offset=0x%04x (%u) size=%u\n",
+              qPrintable(toc[i].id), resOffset, resOffset, toc[i].size);
 
       if (!typeOverride) {
         type = types[toc[i].id];
