@@ -98,17 +98,30 @@ void BitmapResource::setup()
 void BitmapResource::parse(QDataStream* in)
 {
   if (m_pesMode) {
-    quint16 width_bytes, height;
+    quint16 width, height;
     quint16 x, y;
     quint8 unk0, unk1, unk2, unk3;
 
-    *in >> width_bytes >> height;
+    fprintf(stderr, "DEBUG PES: before read, pos=%lld size=%lld status=%d\n", (long long)in->device()->pos(), (long long)in->device()->size(), in->status());
+    *in >> width >> height;
+    fprintf(stderr, "DEBUG PES: after width/height, pos=%lld size=%lld status=%d width=%u height=%u\n", (long long)in->device()->pos(), (long long)in->device()->size(), in->status(), width, height);
+    if (in->status() != 0) { fprintf(stderr, "DEBUG PES: ERROR after width/height!\n"); }
     *in >> x >> y;
+    fprintf(stderr, "DEBUG PES: after x/y, pos=%lld status=%d\n", (long long)in->device()->pos(), in->status());
+    if (in->status() != 0) { fprintf(stderr, "DEBUG PES: ERROR after x/y!\n"); }
     in->skipRawData(4);
+    fprintf(stderr, "DEBUG PES: after skipRawData(4), pos=%lld status=%d\n", (long long)in->device()->pos(), in->status());
+    if (in->status() != 0) { fprintf(stderr, "DEBUG PES: ERROR after skip!\n"); }
     *in >> unk0 >> unk1 >> unk2 >> unk3;
+    fprintf(stderr, "DEBUG PES: after unk, pos=%lld status=%d\n", (long long)in->device()->pos(), in->status());
+    if (in->status() != 0) { fprintf(stderr, "DEBUG PES: ERROR after unk!\n"); }
+    fprintf(stderr, "DEBUG PES: after unk, deviceSize=%lld\n", (long long)in->device()->size());
     checkError(in, tr("header"));
 
-    quint16 width = width_bytes * 8;
+    fprintf(stderr, "DEBUG PES: width_bytes=%u height=%u x=%u y=%u unk=%02x%02x%02x%02x\n",
+            width, height, x, y, unk0, unk1, unk2, unk3);
+
+    quint16 width_pixels = width * 8;
 
     m_ui->editWidth->setText(QString::number(width));
     m_ui->editHeight->setText(QString::number(height));
@@ -125,7 +138,7 @@ void BitmapResource::parse(QDataStream* in)
       return;
     }
 
-    parsePes(in, width, height, unk0, unk1, unk2, unk3);
+    parsePes(in, width_pixels, height, unk0, unk1, unk2, unk3);
     return;
   }
 
@@ -219,6 +232,8 @@ void BitmapResource::parse(QDataStream* in)
 void BitmapResource::parsePes(QDataStream* in, quint16 width, quint16 height,
                               quint8 unk0, quint8 unk1, quint8 unk2, quint8 unk3)
 {
+  fprintf(stderr, "DEBUG parsePes: ENTER width=%u height=%u spriteDataLen=%d pos=%lld\n",
+          width, height, width * height * 4 / 8, (long long)in->device()->pos());
   if (width == 0 || height == 0) {
     return;
   }
@@ -232,21 +247,26 @@ void BitmapResource::parsePes(QDataStream* in, quint16 width, quint16 height,
     try {
       spriteData = new unsigned char[spriteDataLen];
       memset(spriteData, 0, spriteDataLen);
+      fprintf(stderr, "DEBUG parsePes: allocated spriteData\n");
       for (int i = 0; i < 4; i++) {
         bitPlanes[i] = new unsigned char[width * height];
         memset(bitPlanes[i], 0, width * height);
       }
+      fprintf(stderr, "DEBUG parsePes: allocated bitPlanes\n");
     }
     catch (std::bad_alloc& exc) {
       throw tr("Couldn't allocate memory for image data.");
     }
 
     qint64 bytesRead = in->readRawData((char*)spriteData, spriteDataLen);
+    fprintf(stderr, "DEBUG parsePes: readRawData returned %lld (expected %d) pos=%lld\n",
+            (long long)bytesRead, spriteDataLen, (long long)in->device()->pos());
     if (bytesRead < 0) {
       throw tr("Couldn't read sprite data.");
     }
 
     int transposed = (unk2 & 0x10) != 0;
+    fprintf(stderr, "DEBUG parsePes: starting bitplane extraction\n");
 
     for (int plane = 0; plane < 4; plane++) {
       int planeStartBit = plane * width * height;
@@ -273,7 +293,9 @@ void BitmapResource::parsePes(QDataStream* in, quint16 width, quint16 height,
       }
     }
 
+    fprintf(stderr, "DEBUG parsePes: creating QImage %ux%u\n", width, height);
     m_image = new QImage(width, height, QImage::Format_Indexed8);
+    fprintf(stderr, "DEBUG parsePes: QImage created, setting colorTable\n");
     m_image->setColorTable(Settings::m_loadedPalette);
 
     quint8 mask0 = unk0 & 0x0F;

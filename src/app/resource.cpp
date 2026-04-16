@@ -97,9 +97,14 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
           throw tr("Decompression failed with message \"%1\"").arg(errStr).simplified();
         }
 
+        fprintf(stderr, "DEBUG STUNTS: decompressed size = %u\n", compDst.len);
         buf.setData((char*)compDst.data, compDst.len);
         buf.open(QIODevice::ReadOnly);
+        fprintf(stderr, "DEBUG: after setData buf.size=%lld\n", (long long)buf.size());
         in.setDevice(&buf);
+        in.resetStatus();
+        fprintf(stderr, "DEBUG: after setDevice, in.status=%d, buf.pos=%lld, buf.size=%lld\n",
+                in.status(), (long long)buf.pos(), (long long)buf.size());
 
         actualSize = compDst.len;
         delete[] compDst.data;
@@ -237,6 +242,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
 
     for (int i = 0; i < numResources; i++) {
       quint32 resOffset = toc[i].offset;
+      in.resetStatus();
       in.device()->seek(baseOffset + resOffset);
       fprintf(stderr, "DEBUG RES: id='%s' offset=0x%04x (%u) size=%u\n",
               qPrintable(toc[i].id), resOffset, resOffset, toc[i].size);
@@ -485,6 +491,14 @@ void Resource::isModified()
 void Resource::checkError(QDataStream* stream, const QString& what, bool write)
 {
   QString action = write ? tr("writing") : tr("reading");
+
+  fprintf(stderr, "DEBUG checkError: status=%d (%s) pos=%lld size=%lld\n",
+          stream->status(),
+          stream->status() == 0 ? "Ok" :
+          stream->status() == 1 ? "ReadPastEnd" :
+          stream->status() == 2 ? "ReadCorruptData" : "Other",
+          (long long)stream->device()->pos(),
+          (long long)stream->device()->size());
 
   switch (stream->status()) {
     case QDataStream::Ok:
