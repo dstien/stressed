@@ -20,6 +20,8 @@ public:
   QString              type() const  { return "bitmap"; }
   Resource*            clone() const { return new BitmapResource(*this); }
 
+  static void          setPesMode(bool pes) { m_pesMode = pes; }
+
 protected:
   void                 parse(QDataStream* in);
   void                 write(QDataStream* out) const;
@@ -32,8 +34,12 @@ private slots:
 
 private:
   void                 setup();
+  void                 parsePes(QDataStream* in, quint16 width, quint16 height,
+                                quint8 unk0, quint8 unk1, quint8 unk2, quint8 unk3);
 
   Ui::BitmapResource*   m_ui;
+
+  static bool           m_pesMode;
 
   QImage*              m_image;
 

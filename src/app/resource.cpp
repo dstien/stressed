@@ -265,7 +265,13 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
           resource = new ShapeResource(toc[i].id, &in);
         }
         else if (type == "bitmap") {
+          if (isGpcExtension) {
+            BitmapResource::setPesMode(true);
+          }
           resource = new BitmapResource(toc[i].id, &in);
+          if (isGpcExtension) {
+            BitmapResource::setPesMode(false);
+          }
         }
         else if (type == "animation") {
           resource = new AnimationResource(toc[i].id, &in);

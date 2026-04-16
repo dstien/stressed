@@ -11,6 +11,7 @@
 
 QString BitmapResource::m_currentFilePath;
 QString BitmapResource::m_currentFileFilter;
+bool BitmapResource::m_pesMode = false;
 
 const char BitmapResource::FILE_SETTINGS_PATH[] = "paths/bitmap";
 const char BitmapResource::FILE_FILTERS[] =
@@ -96,6 +97,38 @@ void BitmapResource::setup()
 
 void BitmapResource::parse(QDataStream* in)
 {
+  if (m_pesMode) {
+    quint16 width_bytes, height;
+    quint16 x, y;
+    quint8 unk0, unk1, unk2, unk3;
+
+    *in >> width_bytes >> height;
+    *in >> x >> y;
+    in->skipRawData(4);
+    *in >> unk0 >> unk1 >> unk2 >> unk3;
+    checkError(in, tr("header"));
+
+    quint16 width = width_bytes * 8;
+
+    m_ui->editWidth->setText(QString::number(width));
+    m_ui->editHeight->setText(QString::number(height));
+    m_ui->editX->setText(QString::number(x));
+    m_ui->editY->setText(QString::number(y));
+    m_ui->editUnk1->setText("0000");
+    m_ui->editUnk2->setText("0000");
+    m_ui->editUnk3->setText(QString("%1").arg(unk0, 2, 16, QChar('0')).toUpper());
+    m_ui->editUnk4->setText(QString("%1").arg(unk1, 2, 16, QChar('0')).toUpper());
+    m_ui->editUnk5->setText(QString("%1").arg(unk2, 2, 16, QChar('0')).toUpper());
+    m_ui->editUnk6->setText(QString("%1").arg(unk3, 2, 16, QChar('0')).toUpper());
+
+    if (width == 0 || height == 0) {
+      return;
+    }
+
+    parsePes(in, width, height, unk0, unk1, unk2, unk3);
+    return;
+  }
+
   quint16 width, height, x, y, unk1, unk2;
   quint8 unk3, unk4, unk5, unk6;
 
@@ -178,6 +211,101 @@ void BitmapResource::parse(QDataStream* in)
 
   delete[] data;
   data = 0;
+
+  m_ui->buttonExport->setEnabled(true);
+  toggleAlpha(m_ui->checkAlpha->isChecked());
+}
+
+void BitmapResource::parsePes(QDataStream* in, quint16 width, quint16 height,
+                              quint8 unk0, quint8 unk1, quint8 unk2, quint8 unk3)
+{
+  if (width == 0 || height == 0) {
+    return;
+  }
+
+  int spriteDataLen = width * height * 4 / 8;
+
+  unsigned char* spriteData = 0;
+  unsigned char* bitPlanes[4] = {0};
+
+  try {
+    try {
+      spriteData = new unsigned char[spriteDataLen];
+      for (int i = 0; i < 4; i++) {
+        bitPlanes[i] = new unsigned char[width * height];
+      }
+    }
+    catch (std::bad_alloc& exc) {
+      throw tr("Couldn't allocate memory for image data.");
+    }
+
+    if (in->readRawData((char*)spriteData, spriteDataLen) != spriteDataLen) {
+      throw tr("Couldn't read sprite data.");
+    }
+
+    int transposed = (unk2 & 0x10) != 0;
+
+    for (int plane = 0; plane < 4; plane++) {
+      int planeStartBit = plane * width * height;
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          int bit_idx;
+          if (transposed) {
+            bit_idx = planeStartBit + 8 * ((x / 8) * height + y) + (x % 8);
+          } else {
+            bit_idx = planeStartBit + y * width + x;
+          }
+
+          int byte_idx = bit_idx / 8;
+          int bit_pos = 7 - (bit_idx % 8);
+
+          unsigned char bit = 0;
+          if (byte_idx < spriteDataLen) {
+            bit = (spriteData[byte_idx] >> bit_pos) & 1;
+          }
+
+          int idx = y * width + x;
+          bitPlanes[plane][idx] = bit;
+        }
+      }
+    }
+
+    m_image = new QImage(width, height, QImage::Format_Indexed8);
+    m_image->setColorTable(Settings::m_loadedPalette);
+
+    quint8 mask0 = unk0 & 0x0F;
+    quint8 mask1 = unk1 & 0x0F;
+    quint8 mask2 = unk2 & 0x0F;
+    quint8 mask3 = unk3 & 0x0F;
+
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        int idx = y * width + x;
+
+        int color_index = (bitPlanes[3][idx] * mask3) +
+                         (bitPlanes[2][idx] * mask2) +
+                         (bitPlanes[1][idx] * mask1) +
+                         (bitPlanes[0][idx] * mask0);
+        m_image->setPixel(x, y, color_index & 0xFF);
+      }
+    }
+  }
+  catch (QString msg) {
+    delete[] spriteData;
+    for (int i = 0; i < 4; i++) {
+      delete[] bitPlanes[i];
+    }
+
+    delete m_image;
+    m_image = 0;
+
+    throw msg;
+  }
+
+  delete[] spriteData;
+  for (int i = 0; i < 4; i++) {
+    delete[] bitPlanes[i];
+  }
 
   m_ui->buttonExport->setEnabled(true);
   toggleAlpha(m_ui->checkAlpha->isChecked());
