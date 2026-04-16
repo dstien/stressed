@@ -13,7 +13,7 @@
 
 QString BitmapResource::m_currentFilePath;
 QString BitmapResource::m_currentFileFilter;
-bool BitmapResource::m_pesMode = false;
+bool BitmapResource::m_egaMode = false;
 quint32 BitmapResource::m_tocSize = 0;
 
 const char BitmapResource::FILE_SETTINGS_PATH[] = "paths/bitmap";
@@ -100,38 +100,6 @@ void BitmapResource::setup()
 
 void BitmapResource::parse(QDataStream* in)
 {
-  if (m_pesMode) {
-    quint16 width, height;
-    quint16 x, y;
-    quint8 unk0, unk1, unk2, unk3;
-
-    *in >> width >> height;
-    *in >> x >> y;
-    in->skipRawData(4);
-    *in >> unk0 >> unk1 >> unk2 >> unk3;
-    checkError(in, tr("header"));
-
-    quint16 width_pixels = width * 8;
-
-    m_ui->editWidth->setText(QString::number(width));
-    m_ui->editHeight->setText(QString::number(height));
-    m_ui->editX->setText(QString::number(x));
-    m_ui->editY->setText(QString::number(y));
-    m_ui->editUnk1->setText("0000");
-    m_ui->editUnk2->setText("0000");
-    m_ui->editUnk3->setText(QString("%1").arg(unk0, 2, 16, QChar('0')).toUpper());
-    m_ui->editUnk4->setText(QString("%1").arg(unk1, 2, 16, QChar('0')).toUpper());
-    m_ui->editUnk5->setText(QString("%1").arg(unk2, 2, 16, QChar('0')).toUpper());
-    m_ui->editUnk6->setText(QString("%1").arg(unk3, 2, 16, QChar('0')).toUpper());
-
-    if (width == 0 || height == 0) {
-      return;
-    }
-
-    parsePes(in, width_pixels, height, m_tocSize, unk0, unk1, unk2, unk3);
-    return;
-  }
-
   quint16 width, height, x, y, unk1, unk2;
   quint8 unk3, unk4, unk5, unk6;
 
@@ -141,6 +109,10 @@ void BitmapResource::parse(QDataStream* in)
   *in >> x >> y;
   *in >> unk3 >> unk4 >> unk5 >> unk6;
   checkError(in, tr("header"));
+
+  if (m_egaMode) {
+    width *= 8;
+  }
 
   m_ui->editWidth->setText(QString::number(width));
   m_ui->editHeight->setText(QString::number(height));
@@ -155,6 +127,11 @@ void BitmapResource::parse(QDataStream* in)
   m_ui->editUnk6->setText(QString("%1").arg(unk6, 2, 16, QChar('0')).toUpper());
 
   if (width == 0 || height == 0) {
+    return;
+  }
+
+  if (m_egaMode) {
+    parseEga(in, width, height, m_tocSize, unk3, unk4, unk5, unk6);
     return;
   }
 
@@ -219,7 +196,7 @@ void BitmapResource::parse(QDataStream* in)
   toggleAlpha(m_ui->checkAlpha->isChecked());
 }
 
-void BitmapResource::parsePes(QDataStream* in, quint16 width, quint16 height,
+void BitmapResource::parseEga(QDataStream* in, quint16 width, quint16 height,
                               quint32 tocSize, quint8 unk0, quint8 unk1, quint8 unk2, quint8 unk3)
 {
   if (width == 0 || height == 0) {

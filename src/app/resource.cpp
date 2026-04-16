@@ -225,7 +225,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     QString type;
     bool typeOverride = false;
 
-    for (int i = 0; i < numResources - 1; i++) {
+    for (int i = 0; i < numResources; i++) {
       quint32 resOffset = toc[i].offset;
       in.device()->seek(baseOffset + resOffset);
 
@@ -262,12 +262,12 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         }
         else if (type == "bitmap") {
           if (isGpcExtension) {
-            BitmapResource::setPesMode(true);
+            BitmapResource::setEgaMode(true);
             BitmapResource::setTocSize(toc[i].size);
           }
           resource = new BitmapResource(toc[i].id, &in);
           if (isGpcExtension) {
-            BitmapResource::setPesMode(false);
+            BitmapResource::setEgaMode(false);
           }
         }
         else if (type == "animation") {

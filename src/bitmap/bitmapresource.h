@@ -20,7 +20,7 @@ public:
   QString              type() const  { return "bitmap"; }
   Resource*            clone() const { return new BitmapResource(*this); }
 
-  static void          setPesMode(bool pes) { m_pesMode = pes; }
+  static void          setEgaMode(bool ega) { m_egaMode = ega; }
   static void          setTocSize(quint32 size) { m_tocSize = size; }
 
 protected:
@@ -35,12 +35,12 @@ private slots:
 
 private:
   void                 setup();
-  void                 parsePes(QDataStream* in, quint16 width, quint16 height,
+  void                 parseEga(QDataStream* in, quint16 width, quint16 height,
                                 quint32 tocSize, quint8 unk0, quint8 unk1, quint8 unk2, quint8 unk3);
 
   Ui::BitmapResource*   m_ui;
 
-  static bool           m_pesMode;
+  static bool           m_egaMode;
 
   QImage*              m_image;
 
