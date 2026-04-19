@@ -1,6 +1,5 @@
 /*
  * gpcunpack.c - Grand Prix Circuit resource unpacker
- * Based on pcs_decompress.py algorithm by Distinctive Software Inc.
  */
 
 #include <stdlib.h>

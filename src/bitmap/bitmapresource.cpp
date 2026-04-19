@@ -15,7 +15,6 @@
 QString BitmapResource::m_currentFilePath;
 QString BitmapResource::m_currentFileFilter;
 bool BitmapResource::m_egaMode = false;
-quint32 BitmapResource::m_tocSize = 0;
 
 const char BitmapResource::FILE_SETTINGS_PATH[] = "paths/bitmap";
 const char BitmapResource::FILE_FILTERS[] =
@@ -99,16 +98,16 @@ void BitmapResource::setup()
   m_image = 0;
 }
 
-void BitmapResource::parse(QDataStream* in)
-{
+
+void BitmapResource::parse(QDataStream *in) {
   quint16 width, height, x, y, unk1, unk2;
-  quint8 unk3, unk4, unk5, unk6;
+  std::array<quint8, 4> planar;
 
   // Header.
   *in >> width >> height;
   *in >> unk1 >> unk2;
   *in >> x >> y;
-  *in >> unk3 >> unk4 >> unk5 >> unk6;
+  *in >> planar[0] >> planar[1] >> planar[2] >> planar[3];
   checkError(in, tr("header"));
 
   if (m_egaMode) {
@@ -122,83 +121,90 @@ void BitmapResource::parse(QDataStream* in)
 
   m_ui->editUnk1->setText(QString("%1").arg(unk1, 4, 16, QChar('0')).toUpper());
   m_ui->editUnk2->setText(QString("%1").arg(unk2, 4, 16, QChar('0')).toUpper());
-  m_ui->editPlanar0->setText(QString("%1").arg(unk3, 2, 16, QChar('0')).toUpper());
-  m_ui->editPlanar1->setText(QString("%1").arg(unk4, 2, 16, QChar('0')).toUpper());
-  m_ui->editPlanar2->setText(QString("%1").arg(unk5, 2, 16, QChar('0')).toUpper());
-  m_ui->editPlanar3->setText(QString("%1").arg(unk6, 2, 16, QChar('0')).toUpper());
+  m_ui->editPlanar0->setText(QString("%1").arg(planar[0], 2, 16, QChar('0')).toUpper());
+  m_ui->editPlanar1->setText(QString("%1").arg(planar[1], 2, 16, QChar('0')).toUpper());
+  m_ui->editPlanar2->setText(QString("%1").arg(planar[2], 2, 16, QChar('0')).toUpper());
+  m_ui->editPlanar3->setText(QString("%1").arg(planar[3], 2, 16, QChar('0')).toUpper());
 
   if (width == 0 || height == 0) {
     return;
   }
 
   if (m_egaMode) {
-    parseEga(in, width, height, m_tocSize, unk3, unk4, unk5, unk6);
-    return;
+    parseEga(in, width, height, planar);
   }
-
-  // Image data.
-  int length = width * height;
-  unsigned char* data = 0;
-
-  try {
-    try {
-      data = new unsigned char[length];
-    }
-    catch (std::bad_alloc& exc) {
-      throw tr("Couldn't allocate memory for image data.");
-    }
-
-    if (in->readRawData((char*)data, length) != length) {
-      throw tr("Couldn't read image data.");
-    }
-
-    // Process data.
-    m_image = new QImage(width, height, QImage::Format_Indexed8);
-    m_image->setColorTable(Settings::m_loadedPalette);
-
-    int ry = 0;
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        if ((unk5 & 0x10) == 0x10) {
-          m_image->setPixel(x, y, data[(x * height) + y]);
-        }
-        else if ((unk5 & 0x20) == 0x20) {
-          if ((y % 2) == 0) {
-            m_image->setPixel(x, y, data[(x * height) + ry]);
-          }
-          else {
-            m_image->setPixel(x, y, data[(height / 2) + (x * height) + ry]);
-          }
-        }
-        else {
-          m_image->setPixel(x, y, data[(y * width) + x]);
-        }
-      }
-
-      if ((y % 2) == 0) {
-        ry++;
-      }
-    }
+  else
+  {
+    parseVga(in, width, height, planar);
   }
-  catch (QString msg) {
-    delete[] data;
-    data = 0;
-
-    delete m_image;
-    m_image = 0;
-
-    throw msg;
-  }
-
-  delete[] data;
-  data = 0;
 
   m_ui->buttonExport->setEnabled(true);
   toggleAlpha(m_ui->checkAlpha->isChecked());
 }
 
-void BitmapResource::parseEga(QDataStream* in, quint16 width, quint16 height,
-                              quint32 tocSize, quint8 unk0, quint8 unk1, quint8 unk2, quint8 unk3)
+void BitmapResource::parseVga(
+    QDataStream* in,
+    quint16 width,
+    quint16 height,
+    std::array<quint8, 4> const& planar)
+{
+    int length = width * height;
+    unsigned char *data = 0;
+
+    try {
+        try {
+            data = new unsigned char[length];
+        } catch (std::bad_alloc &exc) {
+            throw tr("Couldn't allocate memory for image data.");
+        }
+
+        if (in->readRawData((char *)data, length) != length) {
+            throw tr("Couldn't read image data.");
+        }
+
+        // Process data.
+        m_image = new QImage(width, height, QImage::Format_Indexed8);
+        m_image->setColorTable(Settings::m_loadedPalette);
+
+        int ry = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if ((planar[2] & 0x10) == 0x10) {
+                    m_image->setPixel(x, y, data[(x * height) + y]);
+                } else if ((planar[2] & 0x20) == 0x20) {
+                    if ((y % 2) == 0) {
+                        m_image->setPixel(x, y, data[(x * height) + ry]);
+                    } else {
+                        m_image->setPixel(x, y, data[(height / 2) + (x * height) + ry]);
+                    }
+                } else {
+                    m_image->setPixel(x, y, data[(y * width) + x]);
+                }
+            }
+
+            if ((y % 2) == 0) {
+                ry++;
+            }
+        }
+    } catch (QString msg) {
+        delete[] data;
+        data = 0;
+
+        delete m_image;
+        m_image = 0;
+
+        throw msg;
+    }
+
+    delete[] data;
+    data = 0;
+}
+
+void BitmapResource::parseEga(
+    QDataStream* in,
+    quint16 width,
+    quint16 height,
+    std::array<quint8, 4> const& planar)
 {
   if (width == 0 || height == 0) {
     return;
@@ -212,8 +218,7 @@ void BitmapResource::parseEga(QDataStream* in, quint16 width, quint16 height,
 
   std::vector<std::vector<unsigned char>> bitPlanes(4, std::vector<unsigned char>(width * height, 0));
 
-  quint8 unks[] = {unk0, unk1, unk2, unk3};
-  int transposed_bitmask = unks[2] >> 4 & 0xF;
+  int transposed_bitmask = planar[2] >> 4 & 0xF;
 
   for (int plane = 0; plane < 4; plane++) {
     int transposed = (transposed_bitmask >> plane) & 0x1;
@@ -248,10 +253,10 @@ void BitmapResource::parseEga(QDataStream* in, quint16 width, quint16 height,
     for (int x = 0; x < width; x++) {
       int idx = y * width + x;
 
-      int color_index = (bitPlanes[3][idx] * (unks[3] & 0x0F)) +
-                        (bitPlanes[2][idx] * (unks[2] & 0x0F)) +
-                        (bitPlanes[1][idx] * (unks[1] & 0x0F)) +
-                        (bitPlanes[0][idx] * (unks[0] & 0x0F));
+      int color_index = (bitPlanes[3][idx] * (planar[3] & 0x0F)) +
+                        (bitPlanes[2][idx] * (planar[2] & 0x0F)) +
+                        (bitPlanes[1][idx] * (planar[1] & 0x0F)) +
+                        (bitPlanes[0][idx] * (planar[0] & 0x0F));
       m_image->setPixel(x, y, color_index & 0xFF);
     }
   }

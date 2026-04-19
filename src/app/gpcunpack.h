@@ -1,11 +1,6 @@
 /*
  * gpcunpack - Grand Prix Circuit resource unpacker
- * Based on pcs_decompress.py algorithm by Distinctive Software Inc.
  * 
- * Compression detection:
- *   - byte[0] == 0x82: Stunts format (use stunpack.c)
- *   - byte[0] != 0x82: GPC format (use gpcunpack.c)
- *
  * GPC compressed file format:
  *   Offset 0: uint32 decomp_size (little-endian)
  *   Offset 4: compressed data (RLE encoded)

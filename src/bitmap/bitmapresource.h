@@ -22,10 +22,11 @@ public:
 
   static void          setEgaMode(bool ega) { m_egaMode = ega; }
   static bool          egaMode() { return m_egaMode; }
-  static void          setTocSize(quint32 size) { m_tocSize = size; }
 
 protected:
-  void                 parse(QDataStream* in);
+  void parseVga(QDataStream *&in, quint16 &width, quint16 &height,
+                 int &planar);
+  void parse(QDataStream *in);
   void                 write(QDataStream* out) const;
 
 private slots:
@@ -36,8 +37,18 @@ private slots:
 
 private:
   void                 setup();
-  void                 parseEga(QDataStream* in, quint16 width, quint16 height,
-                                quint32 tocSize, quint8 unk0, quint8 unk1, quint8 unk2, quint8 unk3);
+
+  void parseVga(
+    QDataStream* in,
+    quint16 width,
+    quint16 height,
+    std::array<quint8, 4> const& planar);
+
+  void parseEga(
+      QDataStream* in,
+      quint16 width,
+      quint16 height,
+      std::array<quint8, 4> const& planar);
 
   Ui::BitmapResource*   m_ui;
 

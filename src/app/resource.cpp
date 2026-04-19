@@ -41,6 +41,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
 
   // Check file extension for GPC detection (case-insensitive)
   QString ext = QFileInfo(fileName).suffix().toUpper();
+  bool isCgaFile = ext == "CSH" || ext == "PCS";
   bool isEgaFile = ext == "ESH" || ext == "PES";
   bool isGpcCompressedFile = ext == "PCS" || ext == "PES";
 
@@ -225,7 +226,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
       in.device()->seek(baseOffset + resOffset);
 
       if (!typeOverride) {
-        if (isEgaFile) {
+        if (isCgaFile || isEgaFile) {
           type = "bitmap";
         }
         else {
