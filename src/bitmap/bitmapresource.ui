@@ -174,7 +174,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="editUnk3">
+      <widget class="QLineEdit" name="editPlanar0">
        <property name="maximumSize">
         <size>
          <width>25</width>
@@ -195,7 +195,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="editUnk4">
+      <widget class="QLineEdit" name="editPlanar1">
        <property name="maximumSize">
         <size>
          <width>25</width>
@@ -216,7 +216,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="editUnk5">
+      <widget class="QLineEdit" name="editPlanar2">
        <property name="maximumSize">
         <size>
          <width>25</width>
@@ -237,7 +237,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="editUnk6">
+      <widget class="QLineEdit" name="editPlanar3">
        <property name="maximumSize">
         <size>
          <width>25</width>
@@ -377,25 +377,25 @@
    <slot>isModified()</slot>
   </connection>
   <connection>
-   <sender>editUnk3</sender>
+   <sender>editPlanar0</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
   </connection>
   <connection>
-   <sender>editUnk4</sender>
+   <sender>editPlanar1</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
   </connection>
   <connection>
-   <sender>editUnk5</sender>
+   <sender>editPlanar2</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
   </connection>
   <connection>
-   <sender>editUnk6</sender>
+   <sender>editPlanar3</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>

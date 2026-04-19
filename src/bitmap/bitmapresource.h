@@ -21,6 +21,7 @@ public:
   Resource*            clone() const { return new BitmapResource(*this); }
 
   static void          setEgaMode(bool ega) { m_egaMode = ega; }
+  static bool          egaMode() { return m_egaMode; }
   static void          setTocSize(quint32 size) { m_tocSize = size; }
 
 protected:

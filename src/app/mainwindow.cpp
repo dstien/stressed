@@ -6,6 +6,7 @@
 #include <QUrl>
 #include <QtGlobal>
 
+#include "bitmap/bitmapresource.h"
 #include "mainwindow.h"
 #include "resourcesmodel.h"
 #include "settings.h"
@@ -13,8 +14,8 @@
 const char MainWindow::FILE_SETTINGS_PATH[] = "paths/resource";
 const char MainWindow::FILE_FILTERS_LOAD[] =
     "All known resource files (*.vsh *.pvs *.esh *.pes *.3sh *.p3s *.vce *.pvc *.kms *.pkm *.sfx *.psf *.res *.pre);;"
-    "Bitmaps (*.vsh *.pvs);;"
-    "Icons (*.esh *.pes);;"
+    "VGA bitmaps (*.vsh *.pvs);;"
+    "EGA bitmaps (*.esh *.pes);;"
     "3d shapes (*.3sh *.p3s);;"
     "Voices (*.vce *.pvc);;"
     "Music (*.kms *.pkm);;"
@@ -24,8 +25,8 @@ const char MainWindow::FILE_FILTERS_LOAD[] =
 
 const char MainWindow::FILE_FILTERS_SAVE[] =
     "Unpacked resource files (*.vsh *.esh *.3sh *.vce *.kms *.sfx *.res);;"
-    "Bitmaps (*.vsh);;"
-    "Icons (*.esh);;"
+    "VGA bitmaps (*.vsh);;"
+    "EGA bitmaps (*.esh);;"
     "3d shapes (*.3sh);;"
     "Voices (*.vce);;"
     "Music (*.kms);;"

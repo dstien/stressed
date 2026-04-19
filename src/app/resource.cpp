@@ -41,8 +41,8 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
 
   // Check file extension for GPC detection (case-insensitive)
   QString ext = QFileInfo(fileName).suffix().toUpper();
-  bool isGpcExtension = (ext == "PES" || ext == "PCS");
-  bool isEshExtension = (ext == "ESH");
+  bool isEgaFile = ext == "ESH" || ext == "PES";
+  bool isGpcCompressedFile = ext == "PCS" || ext == "PES";
 
   QFile file(fileName);
 
@@ -64,7 +64,8 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
       quint8 compType = reportedSize & STPK_PASSES_MASK;
       quint32 decompSize = reportedSize >> 8;
 
-      if (firstByte == 0x82 && (compType >= 1) && (compType <= 2) && (fileSize <= STPK_MAX_SIZE) && (fileSize < decompSize)) {
+      if (firstByte == 0x82 && (compType >= 1) && (compType <= 2)
+          && (fileSize <= STPK_MAX_SIZE) && (fileSize < decompSize)) {
         // Stunts compression format
         compSrc.len = fileSize;
         compSrc.offset = compDst.offset = 0;
@@ -101,7 +102,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         delete[] compDst.data;
         compDst.data = NULL;
       }
-      else if (firstByte != 0x82 && isGpcExtension) {
+      else if (firstByte != 0x82 && isGpcCompressedFile) {
         // GPC compression format (only for .PES/.PCS files)
         gpc_Buffer gpcSrc, gpcDst;
         gpcSrc.data = NULL;
@@ -158,12 +159,6 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     else {
       file.seek(0);
       actualSize = reportedSize;
-    }
-
-    // ESH files are uncompressed - treat them as PES format
-    if (isEshExtension) {
-      in.device()->seek(0);
-      isGpcExtension = true;
     }
 
     // Decompression done, restart parsing.
@@ -230,7 +225,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
       in.device()->seek(baseOffset + resOffset);
 
       if (!typeOverride) {
-        if (isGpcExtension) {
+        if (isEgaFile) {
           type = "bitmap";
         }
         else {
@@ -242,13 +237,8 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
       }
 
       if (type.isEmpty()) {
-        if (isGpcExtension) {
-          type = "bitmap";
-        }
-        else {
-          type = tr("unknown");
-          throw tr("Unknown type.");
-        }
+        type = tr("unknown");
+        throw tr("Unknown type.");
       }
 
       resource = 0;
@@ -261,14 +251,11 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
           resource = new ShapeResource(toc[i].id, &in);
         }
         else if (type == "bitmap") {
-          if (isGpcExtension) {
-            BitmapResource::setEgaMode(true);
+          if (isEgaFile) {
+            BitmapResource::setEgaMode(isEgaFile);
             BitmapResource::setTocSize(toc[i].size);
           }
           resource = new BitmapResource(toc[i].id, &in);
-          if (isGpcExtension) {
-            BitmapResource::setEgaMode(false);
-          }
         }
         else if (type == "animation") {
           resource = new AnimationResource(toc[i].id, &in);
