@@ -43,7 +43,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
   QString ext = QFileInfo(fileName).suffix().toUpper();
   bool isCgaFile = ext == "CSH" || ext == "PCS";
   bool isEgaFile = ext == "ESH" || ext == "PES";
-  bool isGpcCompressedFile = ext == "PCS" || ext == "PES";
+  bool hasGpcCompressedExt = ext == "PCS" || ext == "PES";
 
   QFile file(fileName);
 
@@ -65,7 +65,8 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
       quint8 compType = reportedSize & STPK_PASSES_MASK;
       quint32 decompSize = reportedSize >> 8;
 
-      if (firstByte == 0x82 && (compType >= 1) && (compType <= 2)
+      if ((!hasGpcCompressedExt || firstByte == 0x82)
+          && (compType >= 1) && (compType <= 2)
           && (fileSize <= STPK_MAX_SIZE) && (fileSize < decompSize)) {
         // Stunts compression format
         compSrc.len = fileSize;
@@ -103,7 +104,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         delete[] compDst.data;
         compDst.data = NULL;
       }
-      else if (firstByte != 0x82 && isGpcCompressedFile) {
+      else if (firstByte != 0x82 && hasGpcCompressedExt) {
         // GPC compression format (only for .PES/.PCS files)
         gpc_Buffer gpcSrc, gpcDst;
         gpcSrc.data = NULL;
