@@ -73,7 +73,7 @@ void MaterialDelegate::setup()
       icon.fill(QColor(Qt::black));
     }
     else {
-      icon.fill(QColor(Settings::m_loadedPalette[Settings::m_loadedMaterials[i].color]));
+      icon.fill(QColor(Settings::m_vgaPalette[Settings::m_loadedMaterials[i].color]));
     }
 
     switch (Settings::m_loadedMaterials[i].pattern) {

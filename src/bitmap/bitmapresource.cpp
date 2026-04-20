@@ -14,7 +14,6 @@
 
 QString BitmapResource::m_currentFilePath;
 QString BitmapResource::m_currentFileFilter;
-bool BitmapResource::m_egaMode = false;
 
 const char BitmapResource::FILE_SETTINGS_PATH[] = "paths/bitmap";
 const char BitmapResource::FILE_FILTERS[] =
@@ -72,9 +71,17 @@ BitmapResource::BitmapResource(const BitmapResource& res)
   toggleAlpha(m_ui->checkAlpha->isChecked());
 }
 
-BitmapResource::BitmapResource(QString id, QDataStream* in, QWidget* parent, Qt::WindowFlags flags)
+BitmapResource::BitmapResource(
+    QString id,
+    QDataStream* in,
+    quint32 tocSize,
+    bool egaMode,
+    QWidget* parent,
+    Qt::WindowFlags flags)
 : Resource(id, parent, flags),
-  m_ui(new Ui::BitmapResource)
+  m_ui(new Ui::BitmapResource),
+  m_tocSize(tocSize),
+  m_egaMode(egaMode)
 {
   setup();
 
@@ -164,7 +171,7 @@ void BitmapResource::parseVga(
 
         // Process data.
         m_image = new QImage(width, height, QImage::Format_Indexed8);
-        m_image->setColorTable(Settings::m_loadedPalette);
+        m_image->setColorTable(Settings::m_vgaPalette);
 
         int ry = 0;
         for (int y = 0; y < height; y++) {
@@ -211,7 +218,7 @@ void BitmapResource::parseEga(
   }
 
   int headerSize = 16;
-  int tocSpriteSize = (tocSize > (quint32)headerSize) ? (tocSize - headerSize) : 0;
+  int tocSpriteSize = (m_tocSize > (quint32)headerSize) ? (m_tocSize - headerSize) : 0;
 
   std::vector<unsigned char> spriteData(tocSpriteSize, 0);
   in->readRawData((char*)spriteData.data(), tocSpriteSize);
@@ -247,7 +254,7 @@ void BitmapResource::parseEga(
   }
 
   m_image = new QImage(width, height, QImage::Format_Indexed8);
-  m_image->setColorTable(Settings::m_loadedPalette);
+  m_image->setColorTable(Settings::m_egaPalette);
 
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
@@ -439,7 +446,8 @@ void BitmapResource::importFile()
       delete oldImage;
       oldImage = 0;
 
-      m_image = new QImage(newImage->convertToFormat(QImage::Format_Indexed8, Settings::m_loadedPalette));
+      Palette const& palette = m_egaMode ? Settings::m_egaPalette : Settings::m_vgaPalette;
+      m_image = new QImage(newImage->convertToFormat(QImage::Format_Indexed8, palette));
 
       delete newImage;
       newImage = 0;

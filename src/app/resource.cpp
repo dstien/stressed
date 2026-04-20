@@ -252,11 +252,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
           resource = new ShapeResource(toc[i].id, &in);
         }
         else if (type == "bitmap") {
-          if (isEgaFile) {
-            BitmapResource::setEgaMode(isEgaFile);
-            BitmapResource::setTocSize(toc[i].size);
-          }
-          resource = new BitmapResource(toc[i].id, &in);
+          resource = new BitmapResource(toc[i].id, &in, toc[i].size, isEgaFile);
         }
         else if (type == "animation") {
           resource = new AnimationResource(toc[i].id, &in);

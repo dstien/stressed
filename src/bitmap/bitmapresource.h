@@ -14,18 +14,23 @@ class BitmapResource : public Resource
 public:
   BitmapResource(QString id, QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
   BitmapResource(const BitmapResource& res);
-  BitmapResource(QString id, QDataStream* in, QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
+  BitmapResource(
+     QString id,
+     QDataStream* in,
+     quint32 tocSize,
+     bool egaMode,
+     QWidget* parent = nullptr,
+     Qt::WindowFlags flags  = Qt::WindowFlags()) ;
   ~BitmapResource();
 
   QString              type() const  { return "bitmap"; }
   Resource*            clone() const { return new BitmapResource(*this); }
 
-  static void          setEgaMode(bool ega) { m_egaMode = ega; }
-  static bool          egaMode() { return m_egaMode; }
+  void setEgaMode(bool ega) { m_egaMode = ega; }
+  bool egaMode() { return m_egaMode; }
+  void setTocSize(quint32 value) { m_tocSize = value; }
 
 protected:
-  void parseVga(QDataStream *&in, quint16 &width, quint16 &height,
-                 int &planar);
   void parse(QDataStream *in);
   void                 write(QDataStream* out) const;
 
@@ -52,13 +57,13 @@ private:
 
   Ui::BitmapResource*   m_ui;
 
-  static bool           m_egaMode;
 
   QImage*              m_image;
+  quint32 m_tocSize;
+  bool m_egaMode{false};
 
   static QString       m_currentFilePath;
   static QString       m_currentFileFilter;
-  static quint32       m_tocSize;
 
   static const char    FILE_SETTINGS_PATH[];
   static const char    FILE_FILTERS[];
