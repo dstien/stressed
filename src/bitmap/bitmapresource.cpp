@@ -112,14 +112,20 @@ void BitmapResource::parse(QDataStream *in) {
 
   // Header.
   *in >> width >> height;
-  *in >> unk1 >> unk2;
-  *in >> x >> y;
-  *in >> planar[0] >> planar[1] >> planar[2] >> planar[3];
-  checkError(in, tr("header"));
-
   if (m_egaMode) {
     width *= 8;
   }
+
+  // We could merge this and the previous if-block,
+  // but they refer to different domains
+  if (m_egaMode) {
+    *in >> x >> y >> unk1 >> unk2;
+  } else {
+    *in >> unk1 >> unk2 >> x >> y;
+  }
+
+  *in >> planar[0] >> planar[1] >> planar[2] >> planar[3];
+  checkError(in, tr("header"));
 
   m_ui->editWidth->setText(QString::number(width));
   m_ui->editHeight->setText(QString::number(height));
@@ -295,7 +301,13 @@ void BitmapResource::write(QDataStream* out) const
   unk2 = m_ui->editUnk2->text().toUShort(0, 16);
   x = m_ui->editX->text().toUShort();
   y = m_ui->editY->text().toUShort();
-  *out << unk1 << unk2 << x << y;
+
+  if (m_egaMode) {
+    *out << x << y << unk1 << unk2;
+  } else {
+    *out << unk1 << unk2 << x << y;
+  }
+
 
   // Always save with vanilla planar scheme: non-transposed, non-interlaced,
   // EGA in standard bit order
