@@ -56,7 +56,8 @@ public:
   static const char PATH_TYPES[];
   static const char PATH_PATHS_RESOURCE[];
 
-  static Palette    m_loadedPalette;
+  static Palette    m_vgaPalette;
+  static Palette    m_egaPalette;
   static Materials  m_loadedMaterials;
 
 private:

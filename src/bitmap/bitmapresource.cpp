@@ -4,6 +4,9 @@
 #include <QIntValidator>
 #include <QMessageBox>
 
+#include <iostream>
+#include <vector>
+
 #include "app/settings.h"
 #include "bitmapresource.h"
 
@@ -33,10 +36,10 @@ BitmapResource::BitmapResource(QString id, QWidget* parent, Qt::WindowFlags flag
 
   m_ui->editUnk1->setText("0000");
   m_ui->editUnk2->setText("0000");
-  m_ui->editUnk3->setText("01");
-  m_ui->editUnk4->setText("02");
-  m_ui->editUnk5->setText("04");
-  m_ui->editUnk6->setText("08");
+  m_ui->editPlanar0->setText("01");
+  m_ui->editPlanar1->setText("02");
+  m_ui->editPlanar2->setText("04");
+  m_ui->editPlanar3->setText("08");
 }
 
 BitmapResource::BitmapResource(const BitmapResource& res)
@@ -52,10 +55,10 @@ BitmapResource::BitmapResource(const BitmapResource& res)
 
   m_ui->editUnk1->setText(res.m_ui->editUnk1->text());
   m_ui->editUnk2->setText(res.m_ui->editUnk2->text());
-  m_ui->editUnk3->setText(res.m_ui->editUnk3->text());
-  m_ui->editUnk4->setText(res.m_ui->editUnk4->text());
-  m_ui->editUnk5->setText(res.m_ui->editUnk5->text());
-  m_ui->editUnk6->setText(res.m_ui->editUnk6->text());
+  m_ui->editPlanar0->setText(res.m_ui->editPlanar0->text());
+  m_ui->editPlanar1->setText(res.m_ui->editPlanar1->text());
+  m_ui->editPlanar2->setText(res.m_ui->editPlanar2->text());
+  m_ui->editPlanar3->setText(res.m_ui->editPlanar3->text());
 
   if (res.m_image) {
     m_image = new QImage(*res.m_image);
@@ -68,9 +71,17 @@ BitmapResource::BitmapResource(const BitmapResource& res)
   toggleAlpha(m_ui->checkAlpha->isChecked());
 }
 
-BitmapResource::BitmapResource(QString id, QDataStream* in, QWidget* parent, Qt::WindowFlags flags)
+BitmapResource::BitmapResource(
+    QString id,
+    QDataStream* in,
+    quint32 tocSize,
+    bool egaMode,
+    QWidget* parent,
+    Qt::WindowFlags flags)
 : Resource(id, parent, flags),
-  m_ui(new Ui::BitmapResource)
+  m_ui(new Ui::BitmapResource),
+  m_tocSize(tocSize),
+  m_egaMode(egaMode)
 {
   setup();
 
@@ -94,16 +105,26 @@ void BitmapResource::setup()
   m_image = 0;
 }
 
-void BitmapResource::parse(QDataStream* in)
-{
+
+void BitmapResource::parse(QDataStream *in) {
   quint16 width, height, x, y, unk1, unk2;
-  quint8 unk3, unk4, unk5, unk6;
+  std::array<quint8, 4> planar;
 
   // Header.
   *in >> width >> height;
-  *in >> unk1 >> unk2;
-  *in >> x >> y;
-  *in >> unk3 >> unk4 >> unk5 >> unk6;
+  if (m_egaMode) {
+    width *= 8;
+  }
+
+  // We could merge this and the previous if-block,
+  // but they refer to different domains
+  if (m_egaMode) {
+    *in >> x >> y >> unk1 >> unk2;
+  } else {
+    *in >> unk1 >> unk2 >> x >> y;
+  }
+
+  *in >> planar[0] >> planar[1] >> planar[2] >> planar[3];
   checkError(in, tr("header"));
 
   m_ui->editWidth->setText(QString::number(width));
@@ -113,71 +134,145 @@ void BitmapResource::parse(QDataStream* in)
 
   m_ui->editUnk1->setText(QString("%1").arg(unk1, 4, 16, QChar('0')).toUpper());
   m_ui->editUnk2->setText(QString("%1").arg(unk2, 4, 16, QChar('0')).toUpper());
-  m_ui->editUnk3->setText(QString("%1").arg(unk3, 2, 16, QChar('0')).toUpper());
-  m_ui->editUnk4->setText(QString("%1").arg(unk4, 2, 16, QChar('0')).toUpper());
-  m_ui->editUnk5->setText(QString("%1").arg(unk5, 2, 16, QChar('0')).toUpper());
-  m_ui->editUnk6->setText(QString("%1").arg(unk6, 2, 16, QChar('0')).toUpper());
+  m_ui->editPlanar0->setText(QString("%1").arg(planar[0], 2, 16, QChar('0')).toUpper());
+  m_ui->editPlanar1->setText(QString("%1").arg(planar[1], 2, 16, QChar('0')).toUpper());
+  m_ui->editPlanar2->setText(QString("%1").arg(planar[2], 2, 16, QChar('0')).toUpper());
+  m_ui->editPlanar3->setText(QString("%1").arg(planar[3], 2, 16, QChar('0')).toUpper());
 
   if (width == 0 || height == 0) {
     return;
   }
 
-  // Image data.
-  int length = width * height;
-  unsigned char* data = 0;
-
-  try {
-    try {
-      data = new unsigned char[length];
-    }
-    catch (std::bad_alloc& exc) {
-      throw tr("Couldn't allocate memory for image data.");
-    }
-
-    if (in->readRawData((char*)data, length) != length) {
-      throw tr("Couldn't read image data.");
-    }
-
-    // Process data.
-    m_image = new QImage(width, height, QImage::Format_Indexed8);
-    m_image->setColorTable(Settings::m_loadedPalette);
-
-    int ry = 0;
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        if ((unk5 & 0x10) == 0x10) {
-          m_image->setPixel(x, y, data[(x * height) + y]);
-        }
-        else if ((unk5 & 0x20) == 0x20) {
-          if ((y % 2) == 0) {
-            m_image->setPixel(x, y, data[(x * height) + ry]);
-          }
-          else {
-            m_image->setPixel(x, y, data[(height / 2) + (x * height) + ry]);
-          }
-        }
-        else {
-          m_image->setPixel(x, y, data[(y * width) + x]);
-        }
-      }
-
-      if ((y % 2) == 0) {
-        ry++;
-      }
-    }
+  if (m_egaMode) {
+    parseEga(in, width, height, planar);
   }
-  catch (QString msg) {
+  else
+  {
+    parseVga(in, width, height, planar);
+  }
+
+  m_ui->buttonExport->setEnabled(true);
+  toggleAlpha(m_ui->checkAlpha->isChecked());
+}
+
+void BitmapResource::parseVga(
+    QDataStream* in,
+    quint16 width,
+    quint16 height,
+    std::array<quint8, 4> const& planar)
+{
+    int length = width * height;
+    unsigned char *data = 0;
+
+    try {
+        try {
+            data = new unsigned char[length];
+        } catch (std::bad_alloc &exc) {
+            throw tr("Couldn't allocate memory for image data.");
+        }
+
+        if (in->readRawData((char *)data, length) != length) {
+            throw tr("Couldn't read image data.");
+        }
+
+        // Process data.
+        m_image = new QImage(width, height, QImage::Format_Indexed8);
+        m_image->setColorTable(Settings::m_vgaPalette);
+
+        int ry = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if ((planar[2] & 0x10) == 0x10) {
+                    m_image->setPixel(x, y, data[(x * height) + y]);
+                } else if ((planar[2] & 0x20) == 0x20) {
+                    if ((y % 2) == 0) {
+                        m_image->setPixel(x, y, data[(x * height) + ry]);
+                    } else {
+                        m_image->setPixel(x, y, data[(height / 2) + (x * height) + ry]);
+                    }
+                } else {
+                    m_image->setPixel(x, y, data[(y * width) + x]);
+                }
+            }
+
+            if ((y % 2) == 0) {
+                ry++;
+            }
+        }
+    } catch (QString msg) {
+        delete[] data;
+        data = 0;
+
+        delete m_image;
+        m_image = 0;
+
+        throw msg;
+    }
+
     delete[] data;
     data = 0;
+}
 
-    delete m_image;
-    m_image = 0;
-
-    throw msg;
+void BitmapResource::parseEga(
+    QDataStream* in,
+    quint16 width,
+    quint16 height,
+    std::array<quint8, 4> const& planar)
+{
+  if (width == 0 || height == 0) {
+    return;
   }
 
-  delete[] data;
-  data = 0;
+  int headerSize = 16;
+  int tocSpriteSize = (m_tocSize > (quint32)headerSize) ? (m_tocSize - headerSize) : 0;
+
+  std::vector<unsigned char> spriteData(tocSpriteSize, 0);
+  in->readRawData((char*)spriteData.data(), tocSpriteSize);
+
+  std::vector<std::vector<unsigned char>> bitPlanes(4, std::vector<unsigned char>(width * height, 0));
+
+  int transposed_bitmask = planar[2] >> 4 & 0xF;
+
+  for (int plane = 0; plane < 4; plane++) {
+    int transposed = (transposed_bitmask >> plane) & 0x1;
+    int planeStartBit = plane * width * height;
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        int bit_idx;
+        if (transposed) {
+          bit_idx = planeStartBit + 8 * ((x / 8) * height + y) + (x % 8);
+        } else {
+          bit_idx = planeStartBit + y * width + x;
+        }
+
+        int byte_idx = bit_idx / 8;
+        int bit_pos = 7 - (bit_idx % 8);
+
+        unsigned char bit = 0;
+        if (byte_idx < tocSpriteSize) {
+          bit = (spriteData[byte_idx] >> bit_pos) & 1;
+        }
+
+        int idx = y * width + x;
+        bitPlanes[plane][idx] = bit;
+      }
+    }
+  }
+
+  m_image = new QImage(width, height, QImage::Format_Indexed8);
+  m_image->setColorTable(Settings::m_egaPalette);
+
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      int idx = y * width + x;
+
+      int color_index = (bitPlanes[3][idx] * (planar[3] & 0x0F)) +
+                        (bitPlanes[2][idx] * (planar[2] & 0x0F)) +
+                        (bitPlanes[1][idx] * (planar[1] & 0x0F)) +
+                        (bitPlanes[0][idx] * (planar[0] & 0x0F));
+      m_image->setPixel(x, y, color_index & 0xFF);
+    }
+  }
 
   m_ui->buttonExport->setEnabled(true);
   toggleAlpha(m_ui->checkAlpha->isChecked());
@@ -186,10 +281,17 @@ void BitmapResource::parse(QDataStream* in)
 void BitmapResource::write(QDataStream* out) const
 {
   quint16 unk1, unk2, x, y;
-  quint8  unk3, unk4, unk5, unk6;
+  quint8  planar[4];
+
+  quint16 width = m_image ? m_image->width() : 0;
+  quint16 height = m_image ? m_image->height() : 0;
+
+  if (m_egaMode) {
+      width /= 8; // in octets
+  }
 
   if (m_image) {
-    *out << (quint16)m_image->width() << (quint16)m_image->height();
+    *out << width << height;
   }
   else {
     *out << (quint16)0 << (quint16)0;
@@ -199,20 +301,48 @@ void BitmapResource::write(QDataStream* out) const
   unk2 = m_ui->editUnk2->text().toUShort(0, 16);
   x = m_ui->editX->text().toUShort();
   y = m_ui->editY->text().toUShort();
-  *out << unk1 << unk2 << x << y;
 
-  unk3 = m_ui->editUnk3->text().toUShort(0, 16);
-  unk4 = m_ui->editUnk4->text().toUShort(0, 16);
-  unk5 = m_ui->editUnk5->text().toUShort(0, 16) & 0xCF;
-  unk6 = m_ui->editUnk6->text().toUShort(0, 16);
-  *out << unk3 << unk4 << unk5 << unk6;
+  if (m_egaMode) {
+    *out << x << y << unk1 << unk2;
+  } else {
+    *out << unk1 << unk2 << x << y;
+  }
+
+
+  // Always save with vanilla planar scheme: non-transposed, non-interlaced,
+  // EGA in standard bit order
+  planar[0] = 1; // m_ui->editPlanar0->text().toUShort(0, 16);
+  planar[1] = 2; // m_ui->editPlanar1->text().toUShort(0, 16);
+  planar[2] = 4; // m_ui->editPlanar2->text().toUShort(0, 16) & 0xCF;
+  planar[3] = 8; // m_ui->editPlanar3->text().toUShort(0, 16);
+  *out << planar[0] << planar[1] << planar[2] << planar[3];
 
   checkError(out, tr("header"), true);
 
   if (m_image) {
-    int length = m_image->width() * m_image->height();
-    if (out->writeRawData((char*)m_image->bits(), length) != length) {
-      throw tr("Couldn't write image data.");
+    int length = width * height;
+    if (m_egaMode) {
+        for (unsigned plane = 0; plane < 4; ++plane) {
+          for (unsigned y = 0; y < height; ++y) {
+            for (unsigned lineOctet = 0; lineOctet < width; ++lineOctet) {
+                quint8 byte = 0;
+                for (unsigned b = 0; b < 8; ++b) {
+                    unsigned x = lineOctet * 8 + b;
+                    int pixelIndex = m_image->pixelIndex(x, y);
+
+                    bool isPixelChannelUp = ((pixelIndex >> plane) & 1);
+                    byte |= (isPixelChannelUp << (7 - b));
+                }
+                *out << byte;
+            }
+          }
+        }
+    }
+    else
+    {
+      if (out->writeRawData((char*)m_image->bits(), length) != length) {
+        throw tr("Couldn't write image data.");
+      }
     }
   }
 }
@@ -328,7 +458,8 @@ void BitmapResource::importFile()
       delete oldImage;
       oldImage = 0;
 
-      m_image = new QImage(newImage->convertToFormat(QImage::Format_Indexed8, Settings::m_loadedPalette));
+      Palette const& palette = m_egaMode ? Settings::m_egaPalette : Settings::m_vgaPalette;
+      m_image = new QImage(newImage->convertToFormat(QImage::Format_Indexed8, palette));
 
       delete newImage;
       newImage = 0;
@@ -350,10 +481,10 @@ void BitmapResource::importFile()
       m_ui->editWidth->setText(QString::number(m_image->width()));
       m_ui->editHeight->setText(QString::number(m_image->height()));
 
-      m_ui->editUnk3->setText(QString("%1").arg(1, 2, 16, QChar('0')));
-      m_ui->editUnk4->setText(QString("%1").arg(2, 2, 16, QChar('0')));
-      m_ui->editUnk5->setText(QString("%1").arg(4, 2, 16, QChar('0')));
-      m_ui->editUnk6->setText(QString("%1").arg(8, 2, 16, QChar('0')));
+      m_ui->editPlanar0->setText(QString("%1").arg(1, 2, 16, QChar('0')));
+      m_ui->editPlanar1->setText(QString("%1").arg(2, 2, 16, QChar('0')));
+      m_ui->editPlanar2->setText(QString("%1").arg(4, 2, 16, QChar('0')));
+      m_ui->editPlanar3->setText(QString("%1").arg(8, 2, 16, QChar('0')));
 
       m_ui->buttonExport->setEnabled(true);
 

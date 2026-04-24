@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL)
 
 add_executable(app
+    gpcunpack.c
     main.cpp
     mainwindow.cpp
     resource.cpp
@@ -12,6 +13,7 @@ add_executable(app
 
     mainwindow.ui
 
+    gpcunpack.h
     mainwindow.h
     resource.h
     resourcesmodel.h

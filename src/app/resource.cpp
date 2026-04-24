@@ -14,6 +14,7 @@
 #include "resourcesmodel.h"
 #include "settings.h"
 #include "stunpack.h"
+#include "gpcunpack.h"
 
 const QStringList Resource::TYPES = (QStringList() << tr("Animation") << tr("Bitmap") << tr("Path") << tr("Shape") << tr("Speed") << tr("Text") << tr("Tuning"));
 const QStringList Resource::LOAD_TYPES = (QStringList() << tr("Ignore this resource") << tr("Raw data") << Resource::TYPES);
@@ -38,6 +39,12 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
 
   quint32 baseOffset;
 
+  // Check file extension for GPC detection (case-insensitive)
+  QString ext = QFileInfo(fileName).suffix().toUpper();
+  bool isCgaFile = ext == "CSH" || ext == "PCS";
+  bool isEgaFile = ext == "ESH" || ext == "PES";
+  bool hasGpcCompressedExt = ext == "PCS" || ext == "PES";
+
   QFile file(fileName);
 
   if (!file.open(QIODevice::ReadOnly)) {
@@ -54,10 +61,14 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
 
     // Not a valid resource file, try decompression.
     if (reportedSize != fileSize) {
+      quint8 firstByte = reportedSize & 0xFF;
       quint8 compType = reportedSize & STPK_PASSES_MASK;
       quint32 decompSize = reportedSize >> 8;
 
-      if ((compType >= 1) && (compType <= 2) && (fileSize <= STPK_MAX_SIZE) && (fileSize < decompSize)) {
+      if ((!hasGpcCompressedExt || firstByte == 0x82)
+          && (compType >= 1) && (compType <= 2)
+          && (fileSize <= STPK_MAX_SIZE) && (fileSize < decompSize)) {
+        // Stunts compression format
         compSrc.len = fileSize;
         compSrc.offset = compDst.offset = 0;
 
@@ -93,7 +104,56 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
         delete[] compDst.data;
         compDst.data = NULL;
       }
-      // Data doesn't fit compression header, give up.
+      else if (firstByte != 0x82 && hasGpcCompressedExt) {
+        // GPC compression format (only for .PES/.PCS files)
+        gpc_Buffer gpcSrc, gpcDst;
+        gpcSrc.data = NULL;
+        gpcDst.data = NULL;
+
+        try {
+          gpcSrc.data = new uchar[fileSize];
+        }
+        catch (std::bad_alloc& exc) {
+          throw tr("Couldn't allocate memory for compressed file.");
+        }
+
+        file.seek(0);
+        qint64 bytesRead = file.read((char*)gpcSrc.data, fileSize);
+        if (bytesRead != (qint64)fileSize) {
+          delete[] gpcSrc.data;
+          throw tr("Couldn't read compressed data to memory.");
+        }
+        gpcSrc.len = fileSize;
+        gpcSrc.offset = 0;
+        gpcDst.offset = 0;
+
+        char errStr[256];
+        int res = gpc_decomp(&gpcSrc, &gpcDst, errStr);
+
+        delete[] gpcSrc.data;
+        gpcSrc.data = NULL;
+
+        if (res) {
+          if (gpcDst.data) {
+            delete[] gpcDst.data;
+          }
+          errStr[255] = '\0';
+          throw tr("GPC decompression failed with message \"%1\"").arg(errStr).simplified();
+        }
+
+        buf.setData((char*)gpcDst.data, gpcDst.len);
+        buf.open(QIODevice::ReadOnly);
+        in.setDevice(&buf);
+
+        quint32 decompReportedSize;
+        in >> decompReportedSize;
+
+        actualSize = gpcDst.len;
+        delete[] gpcDst.data;
+        gpcDst.data = NULL;
+
+        in.device()->seek(0);
+      }
       else {
         throw tr("Invalid file. Reported size (%1) doesn't match actual file size (%2) or compression header.").arg(reportedSize).arg(file.size());
       }
@@ -163,13 +223,24 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
     bool typeOverride = false;
 
     for (int i = 0; i < numResources; i++) {
-      in.device()->seek(baseOffset + toc[i].offset);
+      quint32 resOffset = toc[i].offset;
+      in.device()->seek(baseOffset + resOffset);
 
       if (!typeOverride) {
-        type = types[toc[i].id];
+        if (isCgaFile || isEgaFile) {
+          type = "bitmap";
+        }
+        else {
+          type = types[toc[i].id];
+        }
       }
       else {
         typeOverride = false;
+      }
+
+      if (type.isEmpty()) {
+        type = tr("unknown");
+        throw tr("Unknown type.");
       }
 
       resource = 0;
@@ -182,7 +253,7 @@ bool Resource::parse(const QString& fileName, ResourcesModel* resourcesModel, QW
           resource = new ShapeResource(toc[i].id, &in);
         }
         else if (type == "bitmap") {
-          resource = new BitmapResource(toc[i].id, &in);
+          resource = new BitmapResource(toc[i].id, &in, toc[i].size, isEgaFile);
         }
         else if (type == "animation") {
           resource = new AnimationResource(toc[i].id, &in);

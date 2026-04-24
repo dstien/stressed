@@ -23,7 +23,8 @@ const char Settings::PATH_PALETTES_VGA[]       = "palettes/vga";
 const char Settings::PATH_TYPES[]              = "types";
 const char Settings::PATH_PATHS_RESOURCE[]     = "paths/resource";
 
-Palette    Settings::m_loadedPalette;
+Palette    Settings::m_vgaPalette;
+Palette    Settings::m_egaPalette;
 Materials  Settings::m_loadedMaterials;
 
 bool       Settings::m_initialized = false;
@@ -34,7 +35,25 @@ Settings::Settings()
   if (!m_initialized) {
     mergeDefaults();
 
-    m_loadedPalette = getPalette(PATH_PALETTES_VGA);
+    m_vgaPalette = getPalette(PATH_PALETTES_VGA);
+    m_egaPalette = {
+        qRgb(0x00, 0x00, 0x00),
+        qRgb(0x00, 0x00, 0xAA),
+        qRgb(0x00, 0xAA, 0x00),
+        qRgb(0x00, 0xAA, 0xAA),
+        qRgb(0xAA, 0x00, 0x00),
+        qRgb(0xAA, 0x00, 0xAA),
+        qRgb(0xAA, 0x55, 0x00),
+        qRgb(0xAA, 0xAA, 0xAA),
+        qRgb(0x55, 0x55, 0x55),
+        qRgb(0x55, 0x55, 0xFF),
+        qRgb(0x55, 0xFF, 0x55),
+        qRgb(0x55, 0xFF, 0xFF),
+        qRgb(0xFF, 0x55, 0x55),
+        qRgb(0xFF, 0x55, 0xFF),
+        qRgb(0xFF, 0xFF, 0x55),
+        qRgb(0xFF, 0xFF, 0xFF),
+        };
     m_loadedMaterials = getMaterials();
 
     m_initialized = true;
@@ -212,6 +231,7 @@ Palette Settings::restorePalette(const QString& path)
 Palette Settings::parsePalette(const QStringList& colorList)
 {
   Palette pal;
+
 
   foreach (QString hex, colorList) {
     pal.append(QColor(hex.trimmed()).rgb());
