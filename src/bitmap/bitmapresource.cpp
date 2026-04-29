@@ -33,9 +33,9 @@ BitmapResource::BitmapResource(QString id, QWidget* parent, Qt::WindowFlags flag
   m_ui->editHeight->setText("0");
   m_ui->editX->setText("0");
   m_ui->editY->setText("0");
+  m_ui->editXalt->setText("0");
+  m_ui->editYalt->setText("0");
 
-  m_ui->editUnk1->setText("0000");
-  m_ui->editUnk2->setText("0000");
   m_ui->editPlanar0->setText("01");
   m_ui->editPlanar1->setText("02");
   m_ui->editPlanar2->setText("04");
@@ -50,11 +50,12 @@ BitmapResource::BitmapResource(const BitmapResource& res)
 
   m_ui->editWidth->setText(res.m_ui->editWidth->text());
   m_ui->editHeight->setText(res.m_ui->editHeight->text());
+
   m_ui->editX->setText(res.m_ui->editX->text());
   m_ui->editY->setText(res.m_ui->editY->text());
+  m_ui->editXalt->setText(res.m_ui->editXalt->text());
+  m_ui->editYalt->setText(res.m_ui->editYalt->text());
 
-  m_ui->editUnk1->setText(res.m_ui->editUnk1->text());
-  m_ui->editUnk2->setText(res.m_ui->editUnk2->text());
   m_ui->editPlanar0->setText(res.m_ui->editPlanar0->text());
   m_ui->editPlanar1->setText(res.m_ui->editPlanar1->text());
   m_ui->editPlanar2->setText(res.m_ui->editPlanar2->text());
@@ -98,16 +99,18 @@ void BitmapResource::setup()
 {
   m_ui->setupUi(this);
 
-  QIntValidator* posValidator = new QIntValidator(0, 65535, this);
+  QIntValidator* posValidator = new QIntValidator(INT16_MIN, INT16_MAX, this);
   m_ui->editX->setValidator(posValidator);
   m_ui->editY->setValidator(posValidator);
+  m_ui->editXalt->setValidator(posValidator);
+  m_ui->editYalt->setValidator(posValidator);
 
   m_image = 0;
 }
 
 
 void BitmapResource::parse(QDataStream *in) {
-  quint16 width, height, x, y, unk1, unk2;
+  qint16 width, height, x, y, xAlt, yAlt;
   std::array<quint8, 4> planar;
 
   // Header.
@@ -116,24 +119,19 @@ void BitmapResource::parse(QDataStream *in) {
     width *= 8;
   }
 
-  // We could merge this and the previous if-block,
-  // but they refer to different domains
-  if (m_egaMode) {
-    *in >> x >> y >> unk1 >> unk2;
-  } else {
-    *in >> unk1 >> unk2 >> x >> y;
-  }
+  *in >> xAlt >> yAlt >> x >> y;
 
   *in >> planar[0] >> planar[1] >> planar[2] >> planar[3];
   checkError(in, tr("header"));
 
   m_ui->editWidth->setText(QString::number(width));
   m_ui->editHeight->setText(QString::number(height));
+
   m_ui->editX->setText(QString::number(x));
   m_ui->editY->setText(QString::number(y));
+  m_ui->editXalt->setText(QString::number(xAlt));
+  m_ui->editYalt->setText(QString::number(yAlt));
 
-  m_ui->editUnk1->setText(QString("%1").arg(unk1, 4, 16, QChar('0')).toUpper());
-  m_ui->editUnk2->setText(QString("%1").arg(unk2, 4, 16, QChar('0')).toUpper());
   m_ui->editPlanar0->setText(QString("%1").arg(planar[0], 2, 16, QChar('0')).toUpper());
   m_ui->editPlanar1->setText(QString("%1").arg(planar[1], 2, 16, QChar('0')).toUpper());
   m_ui->editPlanar2->setText(QString("%1").arg(planar[2], 2, 16, QChar('0')).toUpper());
@@ -280,8 +278,8 @@ void BitmapResource::parseEga(
 
 void BitmapResource::write(QDataStream* out) const
 {
-  quint16 unk1, unk2, x, y;
-  quint8  planar[4];
+  qint16 xAlt, yAlt, x, y;
+  quint8 planar[4];
 
   quint16 width = m_image ? m_image->width() : 0;
   quint16 height = m_image ? m_image->height() : 0;
@@ -297,17 +295,12 @@ void BitmapResource::write(QDataStream* out) const
     *out << (quint16)0 << (quint16)0;
   }
 
-  unk1 = m_ui->editUnk1->text().toUShort(0, 16);
-  unk2 = m_ui->editUnk2->text().toUShort(0, 16);
-  x = m_ui->editX->text().toUShort();
-  y = m_ui->editY->text().toUShort();
+  xAlt = m_ui->editXalt->text().toShort();
+  yAlt = m_ui->editYalt->text().toShort();
+  x = m_ui->editX->text().toShort();
+  y = m_ui->editY->text().toShort();
 
-  if (m_egaMode) {
-    *out << x << y << unk1 << unk2;
-  } else {
-    *out << unk1 << unk2 << x << y;
-  }
-
+  *out << xAlt << yAlt << x << y;
 
   // Always save with vanilla planar scheme: non-transposed, non-interlaced,
   // EGA in standard bit order
