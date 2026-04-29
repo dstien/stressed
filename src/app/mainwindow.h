@@ -29,6 +29,8 @@ private slots:
   void              manual();
   void              about();
 
+  void              compressionFormat();
+
   void              setCurrent(const QModelIndex& index);
 
   void              moveResources(int direction);

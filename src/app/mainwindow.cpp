@@ -8,6 +8,7 @@
 
 #include "bitmap/bitmapresource.h"
 #include "mainwindow.h"
+#include "optionsdialog.h"
 #include "resourcesmodel.h"
 #include "settings.h"
 
@@ -312,6 +313,14 @@ void MainWindow::about()
          "<small>&copy; 2008-2026 <a href=\"mailto:%6\">%7</a> & <a href=\"%8\">contributors</a>.<br>"
          "Licensed under the terms of the <a href=\"http://www.gnu.org/licenses/gpl-2.0.html\">GNU GPL v2</a>."
          "</small></div>").arg(Settings::APP_NAME, Settings::APP_VER, Settings::APP_DESC, Settings::ORG_URL, qVersion(), Settings::APP_CONTACT, Settings::APP_AUTHOR, Settings::CONTRIB_URL));
+}
+
+void MainWindow::compressionFormat()
+{
+  OptionsDialog dialog(this);
+  if (dialog.exec() == QDialog::Accepted) {
+    Settings::setCompressionFormat(dialog.selectedFormat());
+  }
 }
 
 void MainWindow::setCurrent(const QModelIndex& index)

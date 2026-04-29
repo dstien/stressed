@@ -22,6 +22,7 @@ const char Settings::PATH_MATERIALS_PATTERNS[] = "materials/patterns";
 const char Settings::PATH_PALETTES_VGA[]       = "palettes/vga";
 const char Settings::PATH_TYPES[]              = "types";
 const char Settings::PATH_PATHS_RESOURCE[]     = "paths/resource";
+const char Settings::PATH_COMPRESSION_FORMAT[] = "compression/format";
 
 Palette    Settings::m_vgaPalette;
 Palette    Settings::m_egaPalette;
@@ -282,6 +283,18 @@ Materials Settings::restoreMaterials()
   setMaterials(materials);
 
   return materials;
+}
+
+CompressionFormat Settings::getCompressionFormat()
+{
+  Settings settings;
+  return static_cast<CompressionFormat>(settings.value(PATH_COMPRESSION_FORMAT, static_cast<int>(CompressionFormat::Stunts)).toInt());
+}
+
+void Settings::setCompressionFormat(CompressionFormat format)
+{
+  Settings settings;
+  settings.setValue(PATH_COMPRESSION_FORMAT, static_cast<int>(format));
 }
 
 Materials Settings::parseMaterials(const QStringList& colors, const QStringList& patterns)

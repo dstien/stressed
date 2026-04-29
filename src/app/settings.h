@@ -14,6 +14,12 @@ typedef QHash<QString, QString> StringMap;
 typedef QVector<QRgb>           Palette;
 typedef QList<Material>         Materials;
 
+enum class CompressionFormat {
+    Stunts = 0,
+    GrandPrix = 1,
+    TestDrive = 2
+};
+
 class Settings : public QSettings
 {
   Q_OBJECT
@@ -55,6 +61,10 @@ public:
   static const char PATH_PALETTES_VGA[];
   static const char PATH_TYPES[];
   static const char PATH_PATHS_RESOURCE[];
+  static const char PATH_COMPRESSION_FORMAT[];
+
+  static CompressionFormat getCompressionFormat();
+  static void setCompressionFormat(CompressionFormat format);
 
   static Palette    m_vgaPalette;
   static Palette    m_egaPalette;

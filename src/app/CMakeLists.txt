@@ -6,6 +6,8 @@ add_executable(app
     gpcunpack.c
     main.cpp
     mainwindow.cpp
+    optionsdialog.cpp
+    optionsdialog.ui
     resource.cpp
     resourcesmodel.cpp
     settings.cpp
@@ -15,6 +17,7 @@ add_executable(app
 
     gpcunpack.h
     mainwindow.h
+    optionsdialog.h
     resource.h
     resourcesmodel.h
     settings.h
