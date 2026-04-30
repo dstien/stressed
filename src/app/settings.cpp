@@ -22,8 +22,10 @@ const char Settings::PATH_MATERIALS_PATTERNS[] = "materials/patterns";
 const char Settings::PATH_PALETTES_VGA[]       = "palettes/vga";
 const char Settings::PATH_TYPES[]              = "types";
 const char Settings::PATH_PATHS_RESOURCE[]     = "paths/resource";
+const char Settings::PATH_COMPRESSION_FORMAT[] = "compression/format";
 
-Palette    Settings::m_loadedPalette;
+Palette    Settings::m_vgaPalette;
+Palette    Settings::m_egaPalette;
 Materials  Settings::m_loadedMaterials;
 
 bool       Settings::m_initialized = false;
@@ -34,7 +36,25 @@ Settings::Settings()
   if (!m_initialized) {
     mergeDefaults();
 
-    m_loadedPalette = getPalette(PATH_PALETTES_VGA);
+    m_vgaPalette = getPalette(PATH_PALETTES_VGA);
+    m_egaPalette = {
+        qRgb(0x00, 0x00, 0x00),
+        qRgb(0x00, 0x00, 0xAA),
+        qRgb(0x00, 0xAA, 0x00),
+        qRgb(0x00, 0xAA, 0xAA),
+        qRgb(0xAA, 0x00, 0x00),
+        qRgb(0xAA, 0x00, 0xAA),
+        qRgb(0xAA, 0x55, 0x00),
+        qRgb(0xAA, 0xAA, 0xAA),
+        qRgb(0x55, 0x55, 0x55),
+        qRgb(0x55, 0x55, 0xFF),
+        qRgb(0x55, 0xFF, 0x55),
+        qRgb(0x55, 0xFF, 0xFF),
+        qRgb(0xFF, 0x55, 0x55),
+        qRgb(0xFF, 0x55, 0xFF),
+        qRgb(0xFF, 0xFF, 0x55),
+        qRgb(0xFF, 0xFF, 0xFF),
+        };
     m_loadedMaterials = getMaterials();
 
     m_initialized = true;
@@ -213,6 +233,7 @@ Palette Settings::parsePalette(const QStringList& colorList)
 {
   Palette pal;
 
+
   foreach (QString hex, colorList) {
     pal.append(QColor(hex.trimmed()).rgb());
   }
@@ -262,6 +283,18 @@ Materials Settings::restoreMaterials()
   setMaterials(materials);
 
   return materials;
+}
+
+CompressionFormat Settings::getCompressionFormat()
+{
+  Settings settings;
+  return static_cast<CompressionFormat>(settings.value(PATH_COMPRESSION_FORMAT, static_cast<int>(CompressionFormat::Stunts)).toInt());
+}
+
+void Settings::setCompressionFormat(CompressionFormat format)
+{
+  Settings settings;
+  settings.setValue(PATH_COMPRESSION_FORMAT, static_cast<int>(format));
 }
 
 Materials Settings::parseMaterials(const QStringList& colors, const QStringList& patterns)

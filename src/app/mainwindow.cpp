@@ -6,15 +6,17 @@
 #include <QUrl>
 #include <QtGlobal>
 
+#include "bitmap/bitmapresource.h"
 #include "mainwindow.h"
+#include "optionsdialog.h"
 #include "resourcesmodel.h"
 #include "settings.h"
 
 const char MainWindow::FILE_SETTINGS_PATH[] = "paths/resource";
 const char MainWindow::FILE_FILTERS_LOAD[] =
     "All known resource files (*.vsh *.pvs *.esh *.pes *.3sh *.p3s *.vce *.pvc *.kms *.pkm *.sfx *.psf *.res *.pre);;"
-    "Bitmaps (*.vsh *.pvs);;"
-    "Icons (*.esh *.pes);;"
+    "VGA bitmaps (*.vsh *.pvs);;"
+    "EGA bitmaps (*.esh *.pes);;"
     "3d shapes (*.3sh *.p3s);;"
     "Voices (*.vce *.pvc);;"
     "Music (*.kms *.pkm);;"
@@ -24,8 +26,8 @@ const char MainWindow::FILE_FILTERS_LOAD[] =
 
 const char MainWindow::FILE_FILTERS_SAVE[] =
     "Unpacked resource files (*.vsh *.esh *.3sh *.vce *.kms *.sfx *.res);;"
-    "Bitmaps (*.vsh);;"
-    "Icons (*.esh);;"
+    "VGA bitmaps (*.vsh);;"
+    "EGA bitmaps (*.esh);;"
     "3d shapes (*.3sh);;"
     "Voices (*.vce);;"
     "Music (*.kms);;"
@@ -71,6 +73,8 @@ void MainWindow::loadFile(const QString& fileName)
         this,
         QCoreApplication::applicationName(),
         tr("Error loading \"%1\":\n%2").arg(fileName, msg));
+
+    fprintf(stderr, "ERROR LOADING: %s\n", qPrintable(msg));
 
     reset();
   }
@@ -309,6 +313,14 @@ void MainWindow::about()
          "<small>&copy; 2008-2026 <a href=\"mailto:%6\">%7</a> & <a href=\"%8\">contributors</a>.<br>"
          "Licensed under the terms of the <a href=\"http://www.gnu.org/licenses/gpl-2.0.html\">GNU GPL v2</a>."
          "</small></div>").arg(Settings::APP_NAME, Settings::APP_VER, Settings::APP_DESC, Settings::ORG_URL, qVersion(), Settings::APP_CONTACT, Settings::APP_AUTHOR, Settings::CONTRIB_URL));
+}
+
+void MainWindow::compressionFormat()
+{
+  OptionsDialog dialog(this);
+  if (dialog.exec() == QDialog::Accepted) {
+    Settings::setCompressionFormat(dialog.selectedFormat());
+  }
 }
 
 void MainWindow::setCurrent(const QModelIndex& index)

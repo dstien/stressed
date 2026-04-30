@@ -195,9 +195,21 @@
     <addaction name="action_Manual" />
     <addaction name="action_About" />
    </widget>
-   <addaction name="menu_Help" />
+    <widget class="QMenu" name="menu_Options">
+     <property name="title">
+      <string>&amp;Options</string>
+     </property>
+     <action name="action_CompressionFormat">
+      <property name="text">
+       <string>Compression format</string>
+      </property>
+     </action>
+     <addaction name="action_CompressionFormat" />
+    </widget>
+    <addaction name="menu_Options" />
+    <addaction name="menu_Help" />
+   </widget>
   </widget>
- </widget>
  <resources/>
  <connections>
   <connection>
@@ -236,12 +248,18 @@
    <receiver>MainWindow</receiver>
    <slot>manual()</slot>
   </connection>
-  <connection>
-   <sender>action_About</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>about()</slot>
-  </connection>
+   <connection>
+    <sender>action_About</sender>
+    <signal>triggered()</signal>
+    <receiver>MainWindow</receiver>
+    <slot>about()</slot>
+   </connection>
+   <connection>
+    <sender>action_CompressionFormat</sender>
+    <signal>triggered()</signal>
+    <receiver>MainWindow</receiver>
+    <slot>compressionFormat()</slot>
+   </connection>
   <connection>
    <sender>resourcesView</sender>
    <signal>customContextMenuRequested(QPoint)</signal>
