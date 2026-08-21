@@ -2,16 +2,160 @@
 <ui version="4.0">
  <class>BitmapResource</class>
  <widget class="QWidget" name="BitmapResource">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>497</width>
+    <height>293</height>
+   </rect>
+  </property>
   <layout class="QVBoxLayout">
-   <property name="margin">
+   <property name="margin" stdset="0">
     <number>0</number>
    </property>
    <item>
     <layout class="QGridLayout">
+     <item row="3" column="4">
+      <widget class="QLineEdit" name="editY">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="6">
+      <widget class="QLineEdit" name="editXalt">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>Monospace, Courier</family>
+        </font>
+       </property>
+       <property name="inputMask">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="6">
+      <widget class="QLineEdit" name="editYalt">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>Monospace, Courier</family>
+        </font>
+       </property>
+       <property name="inputMask">
+        <string/>
+       </property>
+       <property name="maxLength">
+        <number>32767</number>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <spacer>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
      <item row="0" column="0">
       <widget class="QLabel" name="labelWidth">
        <property name="text">
         <string>Width</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="7">
+      <spacer>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLabel" name="labelX">
+       <property name="text">
+        <string>X</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="3">
+      <widget class="QLabel" name="labelY">
+       <property name="text">
+        <string>Y</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="labelHeight">
+       <property name="text">
+        <string>Height</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="editHeight">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>Monospace, Courier</family>
+        </font>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="4">
+      <widget class="QLineEdit" name="editX">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
        </property>
       </widget>
      </item>
@@ -36,145 +180,33 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="labelHeight">
+     <item row="0" column="5">
+      <widget class="QLabel" name="labelXalt">
        <property name="text">
-        <string>Height</string>
+        <string>    X-alt</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="editHeight">
-       <property name="maximumSize">
-        <size>
-         <width>50</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <family>Monospace, Courier</family>
-        </font>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="5">
-      <spacer>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="3">
-      <widget class="QLabel" name="labelY">
+     <item row="3" column="5">
+      <widget class="QLabel" name="labelYalt">
        <property name="text">
-        <string>Y</string>
+        <string>    Y-alt</string>
        </property>
       </widget>
-     </item>
-     <item row="0" column="3">
-      <widget class="QLabel" name="labelX">
-       <property name="text">
-        <string>X</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="4">
-      <widget class="QLineEdit" name="editX">
-       <property name="maximumSize">
-        <size>
-         <width>50</width>
-         <height>16777215</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="4">
-      <widget class="QLineEdit" name="editY">
-       <property name="maximumSize">
-        <size>
-         <width>50</width>
-         <height>16777215</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <spacer>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint">
-        <size>
-         <width>20</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
      </item>
     </layout>
    </item>
    <item>
     <layout class="QHBoxLayout">
      <item>
-      <widget class="QLineEdit" name="editUnk1">
-       <property name="maximumSize">
-        <size>
-         <width>50</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <family>Monospace, Courier</family>
-        </font>
-       </property>
-       <property name="inputMask">
-        <string>HHHH;</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
+      <widget class="QLabel" name="channelLabel">
+       <property name="text">
+        <string>Channel bitmasks</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="editUnk2">
-       <property name="maximumSize">
-        <size>
-         <width>50</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <family>Monospace, Courier</family>
-        </font>
-       </property>
-       <property name="inputMask">
-        <string>HHHH;</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="editUnk3">
+      <widget class="QLineEdit" name="editPlanar0">
        <property name="maximumSize">
         <size>
          <width>25</width>
@@ -187,7 +219,7 @@
         </font>
        </property>
        <property name="inputMask">
-        <string>HH;</string>
+        <string>HH</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -195,7 +227,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="editUnk4">
+      <widget class="QLineEdit" name="editPlanar1">
        <property name="maximumSize">
         <size>
          <width>25</width>
@@ -208,7 +240,7 @@
         </font>
        </property>
        <property name="inputMask">
-        <string>HH;</string>
+        <string>HH</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -216,7 +248,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="editUnk5">
+      <widget class="QLineEdit" name="editPlanar2">
        <property name="maximumSize">
         <size>
          <width>25</width>
@@ -229,7 +261,7 @@
         </font>
        </property>
        <property name="inputMask">
-        <string>HH;</string>
+        <string>HH</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -237,7 +269,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="editUnk6">
+      <widget class="QLineEdit" name="editPlanar3">
        <property name="maximumSize">
         <size>
          <width>25</width>
@@ -250,7 +282,7 @@
         </font>
        </property>
        <property name="inputMask">
-        <string>HH;</string>
+        <string>HH</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -262,7 +294,7 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint">
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -274,10 +306,16 @@
    </item>
    <item>
     <widget class="QScrollArea" name="scrollArea">
-     <property name="backgroundRole">
-      <enum>QPalette::Dark</enum>
-     </property>
-     <widget class="QLabel" name="imageLabel" />
+     <widget class="QLabel" name="imageLabel">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>12</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
    </item>
    <item>
@@ -297,9 +335,6 @@
        <property name="text">
         <string>&amp;1X</string>
        </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
       </widget>
      </item>
      <item>
@@ -314,6 +349,9 @@
        <property name="text">
         <string>&amp;4X</string>
        </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -321,7 +359,7 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint">
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -357,84 +395,231 @@
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
    <sender>editY</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
-   <sender>editUnk1</sender>
+   <sender>editXalt</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
-   <sender>editUnk2</sender>
+   <sender>editYalt</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
-   <sender>editUnk3</sender>
+   <sender>editPlanar0</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
-   <sender>editUnk4</sender>
+   <sender>editPlanar1</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
-   <sender>editUnk5</sender>
+   <sender>editPlanar2</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
-   <sender>editUnk6</sender>
+   <sender>editPlanar3</sender>
    <signal>textChanged(QString)</signal>
    <receiver>BitmapResource</receiver>
    <slot>isModified()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
    <sender>checkAlpha</sender>
    <signal>toggled(bool)</signal>
    <receiver>BitmapResource</receiver>
    <slot>toggleAlpha(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
    <sender>radioScale1</sender>
    <signal>toggled(bool)</signal>
    <receiver>BitmapResource</receiver>
    <slot>scale()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
    <sender>radioScale2</sender>
    <signal>toggled(bool)</signal>
    <receiver>BitmapResource</receiver>
    <slot>scale()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
    <sender>radioScale4</sender>
    <signal>toggled(bool)</signal>
    <receiver>BitmapResource</receiver>
    <slot>scale()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
    <sender>buttonExport</sender>
    <signal>clicked()</signal>
    <receiver>BitmapResource</receiver>
    <slot>exportFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
   <connection>
    <sender>buttonImport</sender>
    <signal>clicked()</signal>
    <receiver>BitmapResource</receiver>
    <slot>importFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
  </connections>
+ <slots>
+  <slot>isModified()</slot>
+  <slot>toggleAlpha(bool)</slot>
+  <slot>scale()</slot>
+  <slot>exportFile()</slot>
+  <slot>importFile()</slot>
+ </slots>
 </ui>

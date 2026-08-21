@@ -522,7 +522,7 @@ void ShapeView::drawCullData(const Primitive& primitive)
 void ShapeView::setMaterial(const int& material, bool& pattern, const bool& selected, const bool& pick)
 {
   if (!pick) {
-    QColor color = Settings::m_loadedPalette[Settings::m_loadedMaterials[material].color];
+    QColor color = Settings::m_vgaPalette[Settings::m_loadedMaterials[material].color];
 
     if (selected) {
       color.setRed(qMin(0xFF, color.red() + 0x7F));
